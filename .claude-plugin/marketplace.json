@@ -1,0 +1,17 @@
+{
+  "name": "carlos",
+  "owner": {
+    "name": "Paul Campbell"
+  },
+  "plugins": [
+    {
+      "name": "carlos",
+      "source": "./",
+      "description": "Build apps on the CARLOS architecture \u2014 Cost-efficient, Available, Replicated, Lightweight, Open, Secure.",
+      "skills": [
+        "./skills/building-carlos-apps"
+      ]
+    }
+  ],
+  "description": "Claude Code skills for building apps on the CARLOS architecture."
+}
