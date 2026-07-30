@@ -99,10 +99,54 @@ contracts; the shapes are the contract.
 - Canaries can restore the prod replica (`--seed-prod`) so review happens on
   real data — for E2EE apps the canary holds ciphertext it cannot read.
 
+## The home vault (single sign-in across instances)
+
+Instance-per-account creates a sign-in problem by construction: a person
+with three instances must not need three credentials. This has tripped up
+every app in the family; solve it on day one, not after. The answer is
+**home** — a small companion service (Eleven's home server, ported whole
+into siblings rather than reinvented) giving one passkey sign-in that spans
+every instance:
+
+- Home is anonymous and content-blind. It stores credential public keys
+  and **one padded, sealed blob per person** — the vault of instance
+  addresses and wrapped keys, sealed in the browser — and nothing else.
+  Read the schema as the privacy policy.
+- Instance addresses ride the URL `#fragment` on the way through home, so
+  home's server never learns which instances a person uses.
+- When instance hostnames are hidden from users entirely, the app runs on
+  home's origin and calls the instance cross-origin with bearer tokens —
+  the address bar shows home, the content flows direct. **Home never
+  proxies instance traffic**: a proxy would make home load-bearing and
+  hand it a durable session→instance join. Where instances are directly
+  addressable instead, home is only the vault, not the front door.
+- Home is glue (factor XI): thin, blind, replaceable. Losing it costs a
+  convenience, never content — the instances still hold everything.
+- Passkeys are scoped per relying party, so pick home's hostname
+  deliberately and early: renaming an RP later is a multi-phase drill
+  (legacy RP accepted for sign-in, never registration, so the crossover
+  drains), not an edit. Never share home's origin or cookie domain with
+  anything that carries third-party content.
+- Server-trust apps (Tito's model) reach the same one-sign-in outcome
+  differently: identity lives beside the router on the credential origin
+  (the root domain), and reaches instances only as trusted headers the
+  router strips from every client request before minting its own.
+
 ## Frontend
 
-- Server-rendered HTML first; the core flow ships with zero JS and must work
-  without it (confirm pages for destructive actions, form posts).
+- **Server-generated markup is the default, not the fallback.** The core
+  flow ships with zero JS and must work without it (confirm pages for
+  destructive actions, form posts); JS is progressive enhancement on top.
+- **Hide the machinery.** Every instance has a URL, a key, a cipher — the
+  person sees none of them by default. Instance hostnames are deliberately
+  meaningless (sqids, hidden behind home); no nerdspeak in the default
+  flow — no "instance", "key", "encrypt", "URL" in member-facing copy
+  (enforceable as a word blacklist in the browser drive); never show an
+  identifier where a name belongs — prompt for the name instead. The
+  scope is the *default flow* only: settings, docs, the self-hosting
+  path and the published trade-offs speak plainly — this hides the
+  machinery from the person who didn't ask, it never conceals how the
+  system works from the person who did.
 - When JS is needed: a small self-contained ES module — one file, one
   concern, own state, no globals, no bundler. If a module needs another
   module's internals, that's a server round-trip or a redesign, not an
@@ -116,6 +160,11 @@ contracts; the shapes are the contract.
   fakes; `localStorage` access from a leaf module is a test failure.
 - Never `innerHTML` untrusted content — build DOM nodes with a helper whose
   falsy-dropping filter guards the leaked-value bug class.
+- When a view genuinely needs reactivity, the family's one sanctioned
+  reactive dependency is **VanJS, vendored as readable source**: views
+  return `{ el, update }` and build DOM through the same falsy-dropping
+  helper — in van bindings too, never bare tags. Anything heavier than
+  VanJS is a redesign, not a dependency.
 - Assets via `go:embed`, cache-busted by build version (`?v=<sha>` or
   fingerprinted names) so a deploy is never a hard refresh.
 - If a JS dependency is truly needed, vendor it as readable source. No font

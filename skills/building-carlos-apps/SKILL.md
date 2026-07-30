@@ -121,7 +121,7 @@ optional", that's what it means.
 | Dependencies | Stdlib first; "adding a dependency is a decision, not a default"; hand-roll small clients (SigV4 is ~a page of HMACs) over SDKs |
 | Storage | `modernc.org/sqlite`, WAL, one DB per instance, additive-only migrations |
 | Quantities | Integer cents, integer grams — "a float never touches an amount" |
-| Frontend | Server-rendered HTML first; vanilla ES modules, no framework, no bundler, no build step; `go:embed` |
+| Frontend | Server-rendered HTML first; vanilla ES modules, no framework, no bundler, no build step; `go:embed`; vendored VanJS if a view needs reactivity |
 | JS discipline | 300-line module cap enforced by test, ratchet-down only — "we are not doing shell.js again" |
 | Routing | `internal/carlos`: SQLite registry (host → unix socket) + TLS router; the route table IS the ACME allowlist |
 | Replication | Litestream WAL → S3 for every DB; restore drills on a timer |
@@ -129,6 +129,8 @@ optional", that's what it means.
 | IaC | OpenTofu (`tofu`, never Terraform) |
 | Deploys | Build exact `origin/main` in a throwaway worktree, scp, `systemctl restart`, verify `/api/version` == sha on every socket |
 | Identity | Passkeys (WebAuthn, PRF extension) or magic link + TOTP; tokens stored hashed, never logged |
+| Sign-in span | One content-blind "home" vault spans all of a person's instances — port Eleven's home server, don't reinvent it (server-trust apps: identity beside the router instead) |
+| UI stance | Hide the machinery: no hostnames, keys, or crypto vocabulary in the default flow — "no nerdspeak" |
 | Process | Worktree per session; branch → PR → squash-merge; canary per session, review never on localhost |
 | Authorship | 🤖/👨 markers, `Co-Authored-By: Claude …` trailers, published prompt + carbon ledgers |
 
