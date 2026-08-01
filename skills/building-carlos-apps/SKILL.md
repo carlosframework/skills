@@ -26,6 +26,31 @@ remembered.
 Not for: contributing to one of the existing apps (read that repo's CLAUDE.md
 instead — it always wins over this skill).
 
+## Where this sits now (2026-08-01)
+
+Two more pieces of the family exist as real infrastructure now, not just
+conventions to remember, and this skill should be read alongside them:
+
+- **The platform** (`carlosframework/platform`, live) runs the router,
+  registry, hibernation, and Litestream replication described under "The
+  carlos core" and "Replication" in blueprint.md. An app deployed on it
+  does not hand-roll `internal/carlos` or a litestream config — those
+  sections are the reference for self-hosting outside the platform, or
+  for understanding what it's doing on an app's behalf.
+- **Rastrillo** (`carlosframework/rastrillo`, in design as of this date —
+  [design doc](https://github.com/carlosframework/platform/blob/main/docs/superpowers/specs/2026-08-01-carlos-framework-design.md))
+  is a Go web framework that mechanizes a further slice of blueprint.md:
+  the SQLite pragma/migration rules, the JS module-line cap, and the
+  crypto envelope + golden-vector discipline become things
+  `rastrillo.Serve` and its generator enforce, not things kept correct by
+  hand. Marked inline in blueprint.md as **Automatic on rastrillo**.
+
+Building a **new** app: use rastrillo, and read this skill mainly for
+what a framework can't enforce — the one rule below, dated settled
+decisions, the git/PR/canary workflow, and "Common mistakes". Porting an
+existing app, or building without rastrillo for a specific reason:
+blueprint.md in full still applies, hand-rolled.
+
 ## The one rule comes first
 
 Every app opens its CLAUDE.md with a single load-bearing rule and derives
@@ -134,6 +159,13 @@ optional", that's what it means.
 | Process | Worktree per session; branch → PR → squash-merge; canary per session, review never on localhost |
 | Authorship | 🤖/👨 markers, `Co-Authored-By: Claude …` trailers, published prompt + carbon ledgers |
 
+**Automatic on rastrillo:** Storage, Quantities (its `Money` kind, integer
+cents), the JS-discipline line cap, and — for E2EE apps — the ECDH/AES-GCM
+envelope half of Identity. **Automatic on the platform, regardless of
+framework:** Routing and Replication (see blueprint.md). Everything else
+in the table — Hosting, IaC, Deploys, Sign-in span, UI stance, Process,
+Authorship — is unchanged either way.
+
 ## Details
 
 - **[references/blueprint.md](references/blueprint.md)** — the technical and
@@ -147,9 +179,13 @@ optional", that's what it means.
 
 1. Restate the model in your first commit and at the top of README and
    CLAUDE.md.
-2. Take the core now — router, registry, cert handling — into a package
-   named `internal/carlos`, kept deliberately close to the source shape so it
-   can be swapped for the extracted component later.
+2. **Deploying onto `carlosframework/platform`: skip this step.** It
+   provides the router, registry, and cert handling already — see "Where
+   this sits now" above. **Self-hosting outside the platform instead:**
+   take the core now into a package named `internal/carlos`, kept
+   deliberately close to the source shape in blueprint.md's "The carlos
+   core" section so it can be swapped for the platform later if you adopt
+   it.
 3. Adopt the conventions alongside (worktrees, PR playbook, canaries,
    additive migrations, zero-JS-first).
 4. List every deferred component with its trigger; list every deliberate
@@ -163,7 +199,7 @@ optional", that's what it means.
 |---|---|
 | Adding a framework/bundler "just for this screen" | The no-build-step rule is load-bearing (auditability, longevity). One more ES module, one concern. |
 | Growing the biggest file/package | A new concern gets a new small module or package — never more growth of the biggest one. |
-| Destructive migration "to clean up" | Migrations are additive-only. New code over an old DB must always be safe. Never delete data to update. |
+| Destructive migration "to clean up" | Migrations are additive-only. New code over an old DB must always be safe. Never delete data to update. On rastrillo this is a `carlos vet` check, not just a rule to remember. |
 | Trusting a backup that exists | "A backup you've never restored is a hope, not a backup." Restore-verify on a timer. |
 | Reviewing on localhost | Review happens on a deployed canary, always. Shared hosts only ever run merged main. |
 | Skipping the post-deploy browser check | A JS syntax error takes the whole client down and only a real engine sees it (the keymail rule). |
