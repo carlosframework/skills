@@ -4,6 +4,15 @@ The stack and infrastructure shared by the family. Concrete values (instance
 types, timeouts, cap numbers) are the family's defaults — snapshots, not
 contracts; the shapes are the contract.
 
+> **Where rastrillo and the platform change this (2026-08-01):** bullets
+> below marked **Automatic on rastrillo** are, or will be, enforced by
+> `carlosframework/rastrillo` (a Go web framework, in design as this note
+> is written) rather than kept correct by hand. "The carlos core" and
+> "Replication" sections are the **platform's** job now, live, regardless
+> of which framework — if any — the app uses. See SKILL.md's "Where this
+> sits now". Everything else, and this file in full for apps not using
+> rastrillo, is unchanged.
+
 ## Go server
 
 - One module, one static binary: `CGO_ENABLED=0`, cross-compiled
@@ -31,13 +40,13 @@ contracts; the shapes are the contract.
 
 - `modernc.org/sqlite` (pure Go — cgo would break the static binary).
 - One database file per instance; a separate registry DB for the router.
-- Open with: `busy_timeout` set **before** `journal_mode=WAL` (the other
-  order crashes with SQLITE_BUSY under concurrent open), then
-  `SetMaxOpenConns(1)`, then migrate.
-- Migrations are idempotent `CREATE TABLE IF NOT EXISTS` plus an additive
-  `ALTER` list whose errors are ignored only when the message contains
-  "duplicate column". Deploying new code over an old DB must always be
-  safe. Never delete data to update.
+- **Automatic on rastrillo.** Open with: `busy_timeout` set **before**
+  `journal_mode=WAL` (the other order crashes with SQLITE_BUSY under
+  concurrent open), then `SetMaxOpenConns(1)`, then migrate.
+- **Automatic on rastrillo.** Migrations are idempotent `CREATE TABLE IF
+  NOT EXISTS` plus an additive `ALTER` list whose errors are ignored only
+  when the message contains "duplicate column". Deploying new code over
+  an old DB must always be safe. Never delete data to update.
 - Cross-process reads: a long-lived modernc connection can serve a stale WAL
   snapshot of another process's commits — read fleet-visible state (the
   route table) over a fresh connection.
@@ -50,6 +59,11 @@ contracts; the shapes are the contract.
   Don't shard for "performance".
 
 ## The carlos core (`internal/carlos`)
+
+**This whole section is the platform's job now** (`carlosframework/platform`,
+live), not something an app hand-rolls anymore — regardless of whether it
+uses rastrillo. Kept below as the reference for self-hosting outside the
+platform, or for understanding what it's doing on an app's behalf.
 
 - **Registry**: SQLite table of `host → unix socket` routes (+ optional
   slug, kind `instance|service`, lifecycle status, version). It doubles as
@@ -82,6 +96,10 @@ contracts; the shapes are the contract.
   sweep goroutine — never a timer per instance.
 
 ## Replication
+
+**Also the platform's job now**, for the same reason as the carlos core
+above — Litestream is configured and run by the platform's host agent,
+not by each app.
 
 - **Litestream streams every data-bearing SQLite DB to S3. No exceptions.**
   "A box is disposable; the bucket is not." Adopted family-wide after a real
@@ -151,7 +169,8 @@ every instance:
   concern, own state, no globals, no bundler. If a module needs another
   module's internals, that's a server round-trip or a redesign, not an
   import.
-- 300-line cap per module, enforced by a test; at most one named
+- **Automatic on rastrillo** (the same test, carried into `carlos vet`).
+  300-line cap per module, enforced by a test; at most one named
   coordinator module (the store/app shell that wires modules together and
   owns no policy of its own) may carry a higher test-enforced cap. Caps
   only ratchet down — raising a number to make a build pass is the exact
@@ -172,21 +191,29 @@ every instance:
 
 ## Crypto and identity defaults
 
-- Platform primitives only: WebCrypto in the browser, stdlib/x/crypto in Go.
-  One 32-byte seed → HKDF-SHA256 with domain-separated info strings
-  (`app/purpose/v1`) → purpose keys. ECDH P-256 → HKDF → AES-GCM for
-  envelopes; ECIES to wrap per-thread/content keys.
+- **Automatic on rastrillo** (`rastrillo/crypto`, opt-in — an app that
+  isn't E2EE imports nothing from it). Platform primitives only: WebCrypto
+  in the browser, stdlib/x/crypto in Go. One 32-byte seed → HKDF-SHA256
+  with domain-separated info strings (`app/purpose/v1`) → purpose keys.
+  ECDH P-256 → HKDF → AES-GCM for envelopes; ECIES to wrap per-thread/
+  content keys.
 - Secrets that must not reach the server ride the URL `#fragment`.
 - Identity: passkeys with the WebAuthn PRF extension wrapping the seed
   (possession of the PRF output is the security boundary, not the server) —
   or, for server-trust apps, magic link + mandatory TOTP. Either way: 256-bit
   random tokens, stored only as SHA-256, never logged; rate limits keyed by
-  email, IP, and user.
-- When the protocol exists in two or more languages (Go + JS + Swift),
-  golden vectors generated by the Go side are the spec: every implementation
-  must reproduce them, CI/`go test` compares the copies, and a rule change
-  regenerates the vectors in the same commit. Vectors are not snapshots —
-  never update them to make a test pass.
+  email, IP, and user. **Partial on rastrillo:** `rastrillo/webauthn`
+  provides registration/assertion verification primitives (ES256 only, no
+  attestation checking); the PRF-extension seed-wrapping and home-vault
+  flow described here remain hand-built.
+- **Automatic on rastrillo** for the crypto core specifically — the same
+  golden-vector CI discipline, promoted to the framework so it protects
+  every app that uses it from one shared fixture instead of a private
+  copy each. When the protocol exists in two or more languages (Go + JS +
+  Swift), golden vectors generated by the Go side are the spec: every
+  implementation must reproduce them, CI/`go test` compares the copies,
+  and a rule change regenerates the vectors in the same commit. Vectors
+  are not snapshots — never update them to make a test pass.
 - Enumeration resistance where the domain is sensitive: auth endpoints
   answer identically whatever happened.
 
