@@ -1,6 +1,6 @@
 ---
 name: building-carlos-apps
-description: Use when building a new app on the CARLOS architecture (Cost-efficient, Available, Replicated, Lightweight, Open, Secure) or bringing an existing app onto it — the model extracted from Eleven Messenger, Keymail, Woodstar, Slopbox and Kass, adopted by Tito — and you need the family's principles, stack, infrastructure shape, and working conventions without reading the source apps.
+description: Use when building a new app on the CARLOS architecture (Cost-efficient, Available, Replicated, Lightweight, Open, Secure) or with rastrillo (the CARLOS web framework), or bringing an existing app onto it — the model extracted from Eleven Messenger, Keymail, Woodstar, Slopbox and Kass, adopted by Tito — and you need the family's principles, stack, infrastructure shape, and working conventions without reading the source apps.
 ---
 
 # 🤖 Building CARLOS apps
@@ -26,7 +26,7 @@ remembered.
 Not for: contributing to one of the existing apps (read that repo's CLAUDE.md
 instead — it always wins over this skill).
 
-## Where this sits now (2026-08-01)
+## Where this sits now (2026-08-04)
 
 Two more pieces of the family exist as real infrastructure now, not just
 conventions to remember, and this skill should be read alongside them:
@@ -37,19 +37,28 @@ conventions to remember, and this skill should be read alongside them:
   does not hand-roll `internal/carlos` or a litestream config — those
   sections are the reference for self-hosting outside the platform, or
   for understanding what it's doing on an app's behalf.
-- **Rastrillo** (`carlosframework/rastrillo`, in design as of this date —
-  [design doc](https://github.com/carlosframework/platform/blob/main/docs/superpowers/specs/2026-08-01-carlos-framework-design.md))
-  is a Go web framework that mechanizes a further slice of blueprint.md:
-  the SQLite pragma/migration rules, the JS module-line cap, and the
-  crypto envelope + golden-vector discipline become things
-  `rastrillo.Serve` and its generator enforce, not things kept correct by
-  hand. Marked inline in blueprint.md as **Automatic on rastrillo**.
+- **Rastrillo** (`carlosframework/rastrillo`, **shipped** — v1 walking
+  skeleton plus the manifest system; the
+  [design doc](https://github.com/carlosframework/platform/blob/main/docs/superpowers/specs/2026-08-01-carlos-framework-design.md)
+  remains the map of what's built vs deferred) is the Go web framework
+  that mechanizes a further slice of blueprint.md: the SQLite
+  pragma/migration rules, the JS module-line cap, filesystem routing,
+  and — via manifests — a declared resource's whole store, screens, and
+  locale keys become things `rastrillo generate` and `rastrillo.Serve`
+  enforce and produce, not things kept correct by hand. Marked inline
+  in blueprint.md as **Automatic on rastrillo**.
+  **Building with it, read
+  [references/rastrillo.md](references/rastrillo.md)** — the install
+  commands, CLI verbs, layout, and a worked manifest; written to be
+  sufficient on its own, since the framework postdates most models'
+  training data.
 
-Building a **new** app: use rastrillo, and read this skill mainly for
-what a framework can't enforce — the one rule below, dated settled
-decisions, the git/PR/canary workflow, and "Common mistakes". Porting an
-existing app, or building without rastrillo for a specific reason:
-blueprint.md in full still applies, hand-rolled.
+Building a **new** app: use rastrillo (references/rastrillo.md for the
+how), and read the rest of this skill mainly for what a framework can't
+enforce — the one rule below, dated settled decisions, the
+git/PR/canary workflow, and "Common mistakes". Porting an existing app,
+or building without rastrillo for a specific reason: blueprint.md in
+full still applies, hand-rolled.
 
 ## The one rule comes first
 
@@ -159,15 +168,21 @@ optional", that's what it means.
 | Process | Worktree per session; branch → PR → squash-merge; canary per session, review never on localhost |
 | Authorship | 🤖/👨 markers, `Co-Authored-By: Claude …` trailers, published prompt + carbon ledgers |
 
-**Automatic on rastrillo:** Storage, Quantities (its `Money` kind, integer
-cents), the JS-discipline line cap, and — for E2EE apps — the ECDH/AES-GCM
-envelope half of Identity. **Automatic on the platform, regardless of
+**Automatic on rastrillo (as shipped, 2026-08-04):** Storage, Quantities
+(its `Money` kind, integer cents), and — via manifests — a declared
+resource's whole CRUD surface: store, screens, locale keys. Designed for
+rastrillo but not built yet: the JS-discipline line cap and the
+ECDH/AES-GCM envelope half of Identity (those stay hand-kept for now —
+see "Not built yet" in references/rastrillo.md). **Automatic on the platform, regardless of
 framework:** Routing and Replication (see blueprint.md). Everything else
 in the table — Hosting, IaC, Deploys, Sign-in span, UI stance, Process,
 Authorship — is unchanged either way.
 
 ## Details
 
+- **[references/rastrillo.md](references/rastrillo.md)** — building an
+  app with rastrillo: install, CLI verbs (`new`/`generate`/`dev`), the
+  scaffold layout, a worked manifest resource, ejection, migrations.
 - **[references/blueprint.md](references/blueprint.md)** — the technical and
   infrastructure blueprint: the carlos core, storage rules and known SQLite
   fixes, crypto conventions, deploy and box setup, security defaults.
