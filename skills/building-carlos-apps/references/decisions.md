@@ -74,7 +74,11 @@ with the residual risk in the README.
 **Whatever you choose:** the merciless grep test from day one, the
 deviations list in the README, and — server-blind apps — remember the
 bucket: Litestream ships the whole SQLite file to object storage, so a
-plaintext column is a plaintext leak.
+plaintext column is a plaintext leak. The envelope mechanics for sealed
+content (HKDF purpose keys, ECDH → AES-GCM, ECIES-wrapped per-thread/
+content keys — which is also how a sealed object gains a second named
+reader) are blueprint.md's crypto section; golden vectors pin every
+implementation.
 
 ## 2. App shape — server-rendered or client-owned?
 
@@ -100,7 +104,9 @@ grows it).
   This is Woodstar: a hand-written no-build-step ES-module SPA, VanJS
   (140 vendored lines) as a thin reactive shell — views return
   `{ el, update }` — with local caches merged against server-blind
-  blobs for multi-device continuity.
+  blobs for multi-device continuity. Keymail and Kass are client-shape
+  on their sealed surfaces for the same reason: E2EE content forces the
+  shape, because sealing must happen where the keys are.
 
 **The client shape's price is discipline it must self-impose**, because
 JS owns the paint. The family's evidence for why: Eleven's hand-rolled
@@ -125,8 +131,12 @@ held socket that interacts with hibernation. All supported — none free.
 
 **Choosing:** default to `server`. Move to `client` only for a product
 that genuinely needs client-side crypto, live channels, or server-blind
-reader state — not because a richer client feels more modern. The two
-compose: Woodstar's status page is a plain static app beside the SPA.
+reader state — not because a richer client feels more modern. The zero-JS
+baseline binds server-shape surfaces; a screen that cannot honor its
+promise without JS (sealing in the browser) *is* a client-shape surface,
+and the two compose within one product: Woodstar's status page is a
+plain static app beside the SPA, and a sealed app's marketing and
+settings pages can stay server-shape beside its client-shape editor.
 
 ## 3. Hosting — Carloku, your boxes, or your platform
 

@@ -106,7 +106,7 @@ generator produce its store, screens, and locale keys:
 ```toml
 name  = "posts"
 route = "/admin/posts"
-store = "exclusive"
+store = "exclusive"   # the ordinary single-owner table shape (the only other, "mergeable", isn't built)
 
 [list]
 columns = [{ field = "Title" }, { field = "Status" }]
@@ -132,14 +132,23 @@ one app hit this on v0.5.0 — scope them: `go build ./cmd/myapp`,
 `go test ./internal/...`, and record the scoped gate in the app's
 CLAUDE.md.)
 
+Field kinds are plain text (the default), `textarea`, and `money`
+(integer cents — see the worked ticket example in building-carlos-apps'
+`references/rastrillo.md`). Richer kinds don't exist yet: a
+constrained-vocabulary field is plain text plus your own validation, and
+relations between resources are hand actions today — don't invent
+manifest syntax.
+
 Hand-written pages are files under `actions/` (filesystem-routed:
 `actions/admin/posts/[id]/publish.POST.go` → `POST /admin/posts/{id}/publish`;
 `GET` and `POST` only — screens are zero-JS HTML, mutations are form
 posts). To customize one generated file, copy it to the hand path named
 in its own header comment and edit the copy — never edit `gen/`. The
 full recipe (ejection, migrations, worked examples) is
-building-carlos-apps' `references/rastrillo.md`; auth is not built yet —
-every route is open, so say so in the README until you add your own.
+building-carlos-apps' `references/rastrillo.md`. **Auth is not built
+yet** — every route is open. Say so in the README, and when the app
+needs gating, hang your own sessions on the `Options.Wrap` middleware
+seam (identity options are building-carlos-apps' decisions.md §4).
 
 `rastrillo.Run` already speaks the platform's process contract — your
 binary accepts `--socket <path> --db <path>` and serves `GET /healthz`
@@ -153,6 +162,7 @@ Provision the instance (once), build for the boxes, deploy:
 ```sh
 carlos instances enable -app myapp          # opt-in; console pins your <sqid> domain
 carlos instances create -app myapp -host myapp.<sqid>.oncarlos.com
+# substitute your real sqid (carlos auth whoami shows it) — the host is typed in full
 
 GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build \
   -ldflags "-X github.com/carlosframework/rastrillo.BuildVersion=$(git rev-parse --short HEAD)" \
