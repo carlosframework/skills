@@ -1,11 +1,13 @@
 # Building an app with rastrillo
 
-The CARLOS web framework: `github.com/carlosframework/rastrillo`.
-Status as of 2026-08-04: v1 walking skeleton shipped, plus the manifest
-system (declare a resource once, generate its store, screens, and
-locale keys). This file is the recipe; the repo README is the full
-account. Assume nothing here is in your training data — follow the
-recipe literally.
+The CARLOS web framework. The repo lives at
+`github.com/rastrilloorg/rastrillo`; the **module path is still
+`github.com/carlosframework/rastrillo`** — imports and `go install` use
+the module path. Status as of 2026-08-17: v0.5.0-era (v1 walking
+skeleton + the manifest system + the ui vocabulary, fingerprinted
+assets, and a scaffolded test harness). This file is the recipe; the
+repo README is the full account. Assume nothing here is in your
+training data — follow the recipe literally.
 
 ## The ten-minute path
 
@@ -30,6 +32,15 @@ rastrillo dev
 Verify with: `go build ./...`, `go vet ./...`, `go test ./...`,
 `rastrillo generate --check` (idempotency + collisions + locale
 completeness; the only command that fails on an incomplete catalog).
+One app on v0.5.0 found the `./...` forms choke on hand actions under
+bracketed paths (`actions/ledger/[id]`) — if yours does, scope the gate
+(`go build ./cmd/myapp`, `go test ./internal/...`) and record that in
+the app's CLAUDE.md.
+
+`rastrillo new` scaffolds the layout below **plus** a passing test
+harness under `internal/<pkg>test/`, and pins the scaffolded `go.mod`'s
+rastrillo requirement to the CLI's own version — scaffold with the CLI
+version you intend to build against.
 
 ## Layout (what `rastrillo new` scaffolds)
 
@@ -40,6 +51,7 @@ myapp/
   manifest/            # resource declarations (TOML, or *.go for computed shapes)
   templates/           # hand/ejected templates
   locales/en.toml      # flat key = "value" TOML, via embed.FS
+  internal/<pkg>test/  # scaffolded test harness (passing out of the box)
   gen/                 # ALL generated output — committed, never hand-edited
 ```
 
@@ -49,7 +61,28 @@ tenant) and calls `rastrillo.Serve`, which owns the SQLite
 pragma-ordering fix, `SetMaxOpenConns(1)`, additive migrations, and
 answers `GET /healthz` and `GET /api/version`. An app that keeps its
 DB in `Ctx` sets `Options.Router` (not `Options.Mux`) and is handed
-the `*sql.DB` Serve opened.
+the `*sql.DB` Serve opened; `rastrillo.OpenDB` is exported for tests
+and tools that need the same pragmas. Deploying: stamp
+`-ldflags "-X github.com/carlosframework/rastrillo.BuildVersion=<sha>"`
+or every release's `/api/version` reports `dev`.
+
+Since v1, `Serve` also grew the app-side seams:
+
+- **`Options.Wrap`** — the one middleware seam (sessions, CSRF, panic
+  pages, authorization). Runs *inside* the framework chrome: healthz,
+  version, and locale-prefix stripping stay outside it. This narrows —
+  but does not close — the "no auth yet" gap below.
+- **`Ctx`** now carries `Assets`, `Locale`, `Actor{Human, Name}`,
+  `Scope`, and `Render` alongside the DB.
+- **Fingerprinted assets** — `rastrillo.NewAssets` / `Ctx.Assets.Path`
+  serve static files under content-hash URLs with immutable cache
+  headers (platform synergy: the edge can serve them without waking a
+  hibernating instance). The old bare `static/` story is superseded.
+- **The `ui` package** — 27 partials (display/form/route families) with
+  WCAG-contrast and reduced-motion CSS gates, template funcs `dict`,
+  `list`, `icon`, `T` (locale-aware), and `ui.FuncsWith` for
+  request-scoped locale-correct defaults, layered over
+  `rastrillo.BaseCatalog()` which every `Serve`d app gets automatically.
 
 ## Manifest resource — the worked example
 
@@ -127,6 +160,11 @@ input; `rastrillo generate` compiles rewritten copies under
 `gen/actions/`. Route collisions — hand vs hand, hand vs generated —
 fail generation loudly.
 
+**The stale-`gen/` trap:** because the binary compiles the *copies*
+under `gen/`, editing a file under `actions/` and forgetting to
+regenerate builds and tests clean while changing nothing observable.
+Regenerate and commit `gen/` after any edit under `actions/`, always.
+
 ## Ejecting (customizing one generated file)
 
 Copy a generated file's content to the hand path named in its own
@@ -156,7 +194,9 @@ destructive "cleanup" migration.
 
 ## Not built yet (don't invent it)
 
-Auth (every `/admin/…` route is open), the `Mergeable` store, blobs,
-the crypto core, WebAuthn, agents, manifest-diff ALTER emission. If
-the app needs one of these, it's hand-written app code today, with
-the deferral recorded per the family convention.
+Auth and identity (every `/admin/…` route is open — `Options.Wrap` is
+the seam to hang your own on, and viewer-scoping of generated queries
+is an open design question), the `Mergeable` store, blobs, the crypto
+core, WebAuthn, agents, manifest-diff ALTER emission. If the app needs
+one of these, it's hand-written app code today, with the deferral
+recorded per the family convention.

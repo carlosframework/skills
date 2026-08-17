@@ -41,9 +41,12 @@ hard way at least once; the incident is noted where it names the rule.
 - **Every session gets its own canary; review happens on a deployed canary,
   never on localhost.** (Adopted after two sessions sharing a dev host
   produced an evening outage.) Local stacks are for automated drives only.
-- Canaries multiplex onto the devbox: own port/state/unit/TLS at
+- On the platform, a canary is a channel: promote to `canary/<slug>` (a
+  per-session dead-end rung, zero bake) and the canary host serves it at
+  `<canary>.<app>.<sqid>.<domain>` — same rule, no box. Off-platform,
+  canaries multiplex onto the devbox: own port/state/unit/TLS at
   `<branch>.<dev-host>`. Shared hosts (`prod`, the plain dev host) only ever
-  carry main builds — enforced by the deploy script, not memory.
+  carry main builds — enforced by the deploy path, not memory.
 - Report the complete clickable canary URL in **every** reply while
   iterating, with a short list of what to test. The human clicks through
   mid-flight; never make them scroll back for the URL.
@@ -57,26 +60,54 @@ The layers, in order:
 1. **`go test ./...`, `go vet ./...`, `gofmt -l .` — all clean, always.**
    Nothing lands untested; a bug fix carries its regression test. When
    gating on a test run, never pipe it — a pipe eats the exit code (a red
-   suite once merged and deployed exactly this way).
-2. **JS logic DOM-free under `node --test`**, wired into `go test` via a
+   suite once merged and deployed exactly this way). A guard belongs
+   *inside* the test binary, never in a shell step around it — a guard a
+   shell step can satisfy is a guard a shell step can be wrong about
+   (one browser-required check went silently unrun for weeks).
+2. **Prefer a parsing test to a browser for anything computable from
+   source.** Contrast ratios computed from the token file's declarations
+   (WCAG AA, both themes, no browser); network reachability rules parsed
+   from the served JS; performance fixes shipped with an `EXPLAIN QUERY
+   PLAN` assertion over the *exported production query string* so the
+   test cannot drift from the real SQL. When a rule needs an exception,
+   the allowlist entry pins the exact occurrence count, not just the
+   file — a new call site inside an exempted file must still fail.
+3. **JS logic DOM-free under `node --test`**, wired into `go test` via a
    small `jstest_test.go`, so one command runs everything. `node --check`
    alone is not enough — it parses as CommonJS and swallows ES-module errors
    that crash Safari; check a `.mjs` copy and load it in a real engine.
-3. **Browser drives** (Playwright, or chromedp for pure-Go): whole-flow
-   drive on a throwaway instance. Passkey flows run in Chromium — the
-   virtual authenticator is a CDP feature; a separate passkey-free smoke
-   runs in WebKit, Safari's engine, because it breaks first.
-   Loud on purpose: fail on any console error, page error, or failed
-   request, and junk-scan every view for `undefined`, `null`,
-   `[object Object]`, `NaN` — the bug class that renders perfectly and says
-   nothing. A skip is not a pass: report executed-vs-skipped.
-4. **The merciless greps** (server-blind apps): end-to-end tests that grep
+4. **uidump — dump, don't drive** (the seapointish pattern, adopted by
+   the platform console). An env-gated test (`UIDUMP_DIR` set, else
+   skipped) boots the real handler in-process over `httptest`, seeds a
+   fixture world rich enough that every state has a subject, signs in,
+   GETs every named screen, and writes each response body to disk with
+   asset paths rewritten relative so the files stand alone. An agent
+   then screenshots the static files directly with headless Chrome
+   (`--headless --screenshot=…`), re-shooting dark mode by stamping the
+   theme attribute and mobile at a narrow window. Near-zero cost, zero
+   flake, works on a display-less box; adding a screen is one map entry
+   — and **"add your screen to the dump" is a checklist line in every
+   plan**, or coverage rots. It renders HTML+CSS only and asserts
+   nothing itself: it is the visual-review gate, not the invariant gate.
+5. **Browser drives are for the residue** that needs a JS engine and
+   real layout geometry — enhancement-script behaviour, popover sizing,
+   overflow, theme resolution — env-gated, with assertions written as
+   the named bug class they caught. Playwright, or chromedp for
+   pure-Go. Passkey flows run in Chromium — the virtual authenticator
+   is a CDP feature; a separate passkey-free smoke runs in WebKit,
+   Safari's engine, because it breaks first. Loud on purpose: fail on
+   any console error, page error, or failed request, and junk-scan
+   every view for `undefined`, `null`, `[object Object]`, `NaN` — the
+   bug class that renders perfectly and says nothing (a stray `null`
+   *text node* included: native `append()` stringifies one). A skip is
+   not a pass: report executed-vs-skipped.
+6. **The merciless greps** (server-blind apps): end-to-end tests that grep
    raw SQLite bytes *and* S3 objects for plaintext content and names.
-5. **After every deploy: the console check in WebKit** against the live
+7. **After every deploy: the console check in WebKit** against the live
    host (the keymail rule) — a JS syntax error takes the whole client down
    and only a real engine sees it; WebKit specifically, because it is the
    strictest engine and Safari users hit it first.
-6. **Security scan** (Aikido) before ending a work cycle; triage every
+8. **Security scan** (Aikido) before ending a work cycle; triage every
    finding; never publish over an untriaged one.
 
 Simulation suites are the spec for convergence-critical engines (sync,
