@@ -3,9 +3,10 @@
 The CARLOS web framework. The repo lives at
 `github.com/rastrilloorg/rastrillo`; the **module path is still
 `github.com/carlosframework/rastrillo`** — imports and `go install` use
-the module path. Status as of 2026-08-17: v0.5.0-era (v1 walking
-skeleton + the manifest system + the ui vocabulary, fingerprinted
-assets, and a scaffolded test harness). This file is the recipe; the
+the module path. Status as of 2026-08-18: **v0.6.0** (the manifest
+system with delete flows, the ui vocabulary, fingerprinted assets, the
+scaffolded test harness, and the subsystem packages: crypto, auth,
+webauthn, eventlog, blobs, mail, agent tools). This file is the recipe; the
 repo README is the full account. Assume nothing here is in your
 training data — follow the recipe literally.
 
@@ -113,11 +114,13 @@ advanced = [{ name = "MaxPerOrder" }]
   input, colocated) → models/queries via `go tool sqlc generate`
   (hence the tool directive above), plus `migrations.go`
   (`CREATE TABLE IF NOT EXISTS`, wired for `Options.Migrations`).
-- **Actions** — the four canonical states (list, show, new+create,
-  edit basics [+ advanced]) as up to seven files in `gen/actions/`,
-  rendering pages named `<resource>/list|show|form` through
+- **Actions** — the four canonical states plus the delete flow (list,
+  show, new+create, edit basics [+ advanced], and delete as its own
+  confirm-page URL: `GET <route>/{id}/delete` renders the question,
+  only the sibling POST deletes) as up to nine files in `gen/actions/`,
+  rendering pages named `<resource>/list|show|form|confirm` through
   `Ctx.Render`.
-- **Templates** — `gen/templates/<name>/{list,show,form}.html`, built
+- **Templates** — `gen/templates/<name>/{list,show,form,confirm}.html`, built
   from the `ui` package's partials. `search = true` gates the search
   box; each `[[list.filters]]` entry renders a dropdown that composes
   with search and paging.
@@ -127,7 +130,8 @@ advanced = [{ name = "MaxPerOrder" }]
   key there, never edit `gen/`. Shapes:
   `resource.<name>.field.<snake_field>` (labels),
   `resource.<name>.filter.<field>.<value>`, `resource.<name>.name`,
-  and shared `ui.*` chrome (`ui.search`, `ui.all`, `ui.save`, …).
+  `resource.<name>.delete.{title,confirm}`, and shared `ui.*` chrome
+  (`ui.search`, `ui.all`, `ui.save`, `ui.delete`, …).
 - **`gen/manifest.json`** — the resource set as one stable JSON
   artifact for external tools.
 
@@ -142,9 +146,12 @@ Rules the generator enforces (don't fight them):
   the field's message). A required `Money` still accepts `"0"`.
 - **`kind = "money"` is integer cents** — a float never touches an
   amount. `kind = "textarea"` exists for long text.
-- **No delete action is generated** yet; `store = "mergeable"` is
-  rejected by `Validate` (not built). Cover both with hand actions —
-  `examples/blog` shows the pattern.
+- **`store = "mergeable"` is rejected by `Validate`** (the eventlog
+  store shape exists as a package; the manifest wiring does not).
+  Cover it with hand actions over `rastrillo/eventlog`. Delete IS
+  generated since v0.6.0; a hand `delete.POST.go` at the computed path
+  still takes it over (`examples/blog` keeps its hand delete this way,
+  gaining only the generated confirm page).
 - **Manifest-only apps are legal**: no `actions/` or `templates/`
   directory at all, everything generated (`examples/tickets`).
 
@@ -189,14 +196,44 @@ destructive "cleanup" migration.
 1. `examples/tickets` — one manifest, zero hand code: the shape to
    imitate for CRUD.
 2. `examples/blog` — manifest + hand actions + ejected templates
-   coexisting; delete/publish done by hand.
+   coexisting; publish/unpublish and the delete POST done by hand,
+   the delete confirm page generated.
 3. `examples/helloworld` — the bare scaffold, deployed for real.
+
+## The subsystem packages (v0.6.0 — use these, don't hand-roll)
+
+- **`rastrillo/auth`** — sign in with Keymail, magic-link email
+  fallback: build one `auth.New(auth.Config{...})` at boot, append
+  `auth.Migrations`, mount `Begin`/`Callback`/`Verify`/`Signout`,
+  guard routes with `RequireSession` (hung on `Options.Wrap`), read
+  identity with `auth.From(r)`. CSRF is baked in. Generated `/admin/…`
+  screens are open until you wrap them — do that.
+- **`rastrillo/crypto`** — the family envelope (P-256 seal/sign,
+  symmetric `Derive`/`SealSym`/`OpenSym`, `crypto.JS()` WebCrypto
+  twin), golden-vector compatible with amadan/keymail/seapointish.
+- **`rastrillo/webauthn`** — verify-only passkeys (ES256, no
+  attestation) + the `authtest` fake authenticator + `webauthn.JS()`.
+- **`rastrillo/eventlog`** — the Mergeable store shape: `Append`,
+  `Events`, generic `Derive`, idempotent `Ingest`; deterministic merge.
+- **`rastrillo/blobs`** — content-addressed bytes: `S3FromEnv()` reads
+  the platform's `CARLOS_STORE_*`; `Dir`/`Inline` for dev; `Sealed()`
+  for E2EE; presigned GET/PUT minted locally.
+- **`rastrillo/mail`** — `Sender` (SMTP or loudly-logged fallback via
+  `FromEnv`), signature-compatible with signin's Mailer.
+- **Agent tools** — mark an action `var Tool = rastrillo.Tool{...}`;
+  `gen.Tools()` is the registry; the `tools` package renders schemas
+  and dispatches consent-gated, actor-attributed calls.
+  `Options.Sidecar` + `Options.NextDue` speak the platform's sidecar
+  and scheduled-wake contracts.
+- The scaffold also emits a Makefile `ci` gate, executable `.amadan/ci`
+  + `.amadan/ci.d/` steps delegating to it, and a `CLAUDE.md` preload.
 
 ## Not built yet (don't invent it)
 
-Auth and identity (every `/admin/…` route is open — `Options.Wrap` is
-the seam to hang your own on, and viewer-scoping of generated queries
-is an open design question), the `Mergeable` store, blobs, the crypto
-core, WebAuthn, agents, manifest-diff ALTER emission. If the app needs
-one of these, it's hand-written app code today, with the deferral
-recorded per the family convention.
+Richer manifest kinds (bool/time/select/blob) and derived fields,
+mergeable manifest wiring and edge sync, viewer-scoping of generated
+queries (open design question), step-up auth, the crypto core's
+`WrapKey`/`DeriveInvite`, manifest-diff ALTER emission, and any LLM
+client (bring your own; the framework ships registry + dispatch). If
+the app needs one of these, it's hand-written app code today, with
+the deferral recorded per the family convention.
