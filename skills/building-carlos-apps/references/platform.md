@@ -42,12 +42,13 @@ Snapshot date 2026-08-17; verbs are stable, flag details evolve — trust
   short sha is the house convention.
 - **Channel ladder** — `canary → edge → beta → stable`, climbed by
   `carlos promote`. Reaching `stable` cuts a semver tag; `-hotfix`
-  bypasses the ladder (recorded, not forbidden). A fresh build may land
-  straight on `stable`. `canary/<slug>` side-channels are per-session
-  dead ends. **What the ladder means is deployment-specific**: where
-  routes follow `edge`, the higher rungs record human sign-off rather
-  than gate what anyone can see — check what your instances follow
-  (`carlos channels`) before assuming.
+  bypasses the ladder (recorded, not forbidden). `canary/<slug>`
+  side-channels are per-session dead ends. **The serving rung is
+  `edge`** (Paul's ruling, 2026-08-19): for an app with no production
+  flag, edge *is* production, and climbing to `beta`/`stable` records
+  human sign-off rather than gating what anyone can see. Instances can
+  be wired to follow other channels — `carlos channels` shows what
+  actually serves — but edge-serves is the family story.
 - **Production flag** — a flagged app gets bake windows on promotion and
   console passkey step-up for the sensitive moves; unflagged apps
   promote freely. Ceremony is opt-in per app, not per channel.
