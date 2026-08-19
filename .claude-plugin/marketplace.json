@@ -9,6 +9,7 @@
       "source": "./",
       "description": "Build apps on the CARLOS architecture \u2014 Cost-efficient, Available, Replicated, Lightweight, Open, Secure.",
       "skills": [
+        "./skills/getting-started",
         "./skills/building-carlos-apps",
         "./skills/delegate"
       ]

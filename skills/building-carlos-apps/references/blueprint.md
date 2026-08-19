@@ -4,14 +4,15 @@ The stack and infrastructure shared by the family. Concrete values (instance
 types, timeouts, cap numbers) are the family's defaults — snapshots, not
 contracts; the shapes are the contract.
 
-> **Where rastrillo and the platform change this (2026-08-01):** bullets
-> below marked **Automatic on rastrillo** are, or will be, enforced by
-> `carlosframework/rastrillo` (a Go web framework, in design as this note
-> is written) rather than kept correct by hand. "The carlos core" and
-> "Replication" sections are the **platform's** job now, live, regardless
-> of which framework — if any — the app uses. See SKILL.md's "Where this
-> sits now". Everything else, and this file in full for apps not using
-> rastrillo, is unchanged.
+> **Scope (re-drawn 2026-08-17):** this file is the *under-the-hood and
+> self-hosting* reference — what the platform does on an app's behalf,
+> and the complete recipe for running without it. An app **on** the
+> platform (hosted or self-hosted deployment) hand-rolls none of "The
+> carlos core", "Replication", the deploy recipe, or config delivery:
+> those are driven through the `carlos` CLI — see
+> [platform.md](platform.md). Bullets marked **Automatic on rastrillo**
+> are enforced by the framework. The Go server, SQLite, frontend, and
+> crypto sections bind every app regardless.
 
 ## Go server
 
@@ -21,16 +22,20 @@ contracts; the shapes are the contract.
 - `main.go` is subcommand dispatch and environment reading only — everything
   real lives in `internal/`, grouped by concern. "A new concern gets a new
   small package, not a new file in the biggest one."
-- Typical subcommands: `serve`, `router`, `add`/`remove`/`instances`, `ops
-  …`, `version`. Ops verbs (`ops deploy|doctor|status|litestream|
-  restore-verify`) are code, not runbooks.
+- Subcommands: a platform-deployed rastrillo app needs none — the binary
+  speaks `--socket`/`--db` via `rastrillo.Run` and everything operational
+  is a `carlos` verb. Self-hosted-without-platform apps grow their own
+  (`serve`, `router`, `add`/`remove`/`instances`, `ops …`, `version`);
+  ops verbs are code, not runbooks — and delete any ops verb the moment
+  it can report success while changing nothing (one did, for weeks).
 - HTTP is stdlib: `http.NewServeMux` with method+pattern routes
   (`mux.HandleFunc("GET /api/thing", …)`), `writeJSON`/`httpError` helpers,
   `http.MaxBytesReader` on every body. Wire all routes in one
   `Server.handler()` so httptest exercises the real router.
 - Config: flags with `<APP>_*` env fallback. **Secrets are env-only, never
-  flags** (argv is visible in `ps`), delivered over ssh stdin or 0600
-  `EnvironmentFile`s.
+  flags** (argv is visible in `ps`). On the platform they are delivered by
+  `carlos env`/`carlos secrets` (sealed, converged in seconds); ssh-stdin
+  or 0600 `EnvironmentFile`s is the off-platform form only.
 - Dependency floor: `modernc.org/sqlite` + `golang.org/x/crypto` (autocert).
   Everything else earns its place. Hand-roll small API clients (S3 SigV4,
   Stripe form-posts) instead of importing SDKs; if usage grows past a
@@ -90,10 +95,11 @@ platform, or for understanding what it's doing on an app's behalf.
 - Provisioning order: make the directory, create the owner, start the
   instance, wait for it to actually answer, and only then publish the route
   — publishing earlier makes the owner's first visit a 502.
-- Hibernation (when idle economics demand): park sleeping instances' state
-  in S3 under a single-writer lease (one object that is both lock and
-  manifest, expiring, with fenced commit), wake on request, sleep via one
-  sweep goroutine — never a timer per instance.
+- Hibernation (live and default-on for the platform's provisioned
+  instances; build it yourself only off-platform): park sleeping
+  instances' state in S3 under a single-writer lease (one object that is
+  both lock and manifest, expiring, with fenced commit), wake on request,
+  sleep via one sweep goroutine — never a timer per instance.
 
 ## Replication
 
@@ -217,7 +223,12 @@ every instance:
 - Enumeration resistance where the domain is sensitive: auth endpoints
   answer identically whatever happened.
 
-## Boxes and deploys
+## Boxes and deploys (self-hosting outside the platform only)
+
+**On the platform, this whole section is `carlos deploy`** — ship,
+promote, watch `X-Carlos-Version` — and box choice, TLS, and systemd
+hardening are the platform operator's concern. What follows is the
+recipe the platform automated, for running without it.
 
 - One or two tiny ARM boxes: AWS t4g.nano (prod) / t4g.micro (dev) in
   eu-west-1, or a single Hetzner box. Dedicated cloud account per product
@@ -231,12 +242,10 @@ every instance:
   prevent_destroy = true }` — an AMI-drift replacement once deleted root
   volumes. Never `tofu apply` from a checkout older than main: state removal
   destroys resources.
-- TLS on-box: the default is autocert inside the router with the registry
-  as allowlist. A static-binary Caddy in front (never a distro package) is
-  the fallback for apps that haven't grown the router yet — one app process
-  behind `127.0.0.1`, per-canary Caddy config blocks validated before
-  reload so a bad canary can't take the shared box down. No load balancer,
-  no CDN, no containers.
+- TLS on-box: autocert inside the router with the registry as allowlist.
+  (The static-binary-Caddy-in-front fallback is historical — pre-router
+  apps used it; nothing current does.) No load balancer, no CDN, no
+  containers.
 - systemd hardening on every unit: dedicated user, empty
   `CapabilityBoundingSet` (router alone keeps `CAP_NET_BIND_SERVICE`),
   `NoNewPrivileges`, `ProtectSystem=strict` with narrow `ReadWritePaths`,
