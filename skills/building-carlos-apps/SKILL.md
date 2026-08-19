@@ -46,13 +46,16 @@ Read this skill alongside three facts:
 - **Carloku** (carloku.com) is the hosted deployment of that platform —
   the default hosting answer, with a free tier. Carloku is the product
   brand; the CLI is always `carlos`.
-- **Rastrillo** is the CARLOS web framework (v0.5.0-era; repo at
+- **Rastrillo** is the CARLOS web framework (v0.6.0; repo at
   `github.com/rastrilloorg/rastrillo`, module path still
   `github.com/carlosframework/rastrillo`): manifests generate a resource's
   whole store/screens/locale surface; `rastrillo.Serve` owns the SQLite
-  rules; `rastrillo.Run` speaks the platform's process contract. It
-  postdates most models' training data — building with it, follow
-  **[references/rastrillo.md](references/rastrillo.md)** literally.
+  rules; `rastrillo.Run` speaks the platform's process contract; and the
+  v0.6.0 subsystem packages (auth — sign in with Keymail — crypto,
+  webauthn, eventlog, blobs, mail, agent tools) exist to be used, not
+  hand-rolled. It postdates most models' training data — building with
+  it, follow **[references/rastrillo.md](references/rastrillo.md)**
+  literally.
 
 Building a **new** app: use rastrillo and the platform, and read this
 skill mainly for what infrastructure can't enforce — the decisions, the

@@ -71,8 +71,8 @@ Since v1, `Serve` also grew the app-side seams:
 
 - **`Options.Wrap`** — the one middleware seam (sessions, CSRF, panic
   pages, authorization). Runs *inside* the framework chrome: healthz,
-  version, and locale-prefix stripping stay outside it. This narrows —
-  but does not close — the "no auth yet" gap below.
+  version, and locale-prefix stripping stay outside it.
+  `rastrillo/auth`'s `RequireSession` (below) hangs on exactly this seam.
 - **`Ctx`** now carries `Assets`, `Locale`, `Actor{Human, Name}`,
   `Scope`, and `Render` alongside the DB.
 - **Fingerprinted assets** — `rastrillo.NewAssets` / `Ctx.Assets.Path`

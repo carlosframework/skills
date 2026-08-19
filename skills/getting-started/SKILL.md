@@ -46,9 +46,11 @@ The pieces, named once:
 ## The one decision you must still record
 
 The family default is server-blindness ("if the server is compromised,
-the attacker gets nothing"), but rastrillo has no crypto core yet, so a
-getting-started app cannot cheaply be end-to-end encrypted. The honest
-default for a first app is **server-readable data, declared**: one line
+the attacker gets nothing"), and rastrillo v0.6.0 ships the family
+envelope (`rastrillo/crypto`) — but E2EE is an architecture, not a
+package import: key custody, recovery, and search all become product
+surface. The honest default for a first app is
+**server-readable data, declared**: one line
 in the README under "Honest trade-offs" saying the server can read app
 data, dated. That satisfies the family's deviation rule (every deviation
 enumerated, justified, published).
@@ -144,11 +146,13 @@ Hand-written pages are files under `actions/` (filesystem-routed:
 `GET` and `POST` only — screens are zero-JS HTML, mutations are form
 posts). To customize one generated file, copy it to the hand path named
 in its own header comment and edit the copy — never edit `gen/`. The
-full recipe (ejection, migrations, worked examples) is
-building-carlos-apps' `references/rastrillo.md`. **Auth is not built
-yet** — every route is open. Say so in the README, and when the app
-needs gating, hang your own sessions on the `Options.Wrap` middleware
-seam (identity options are building-carlos-apps' decisions.md §4).
+full recipe (ejection, migrations, worked examples, the v0.6.0
+subsystem packages) is building-carlos-apps' `references/rastrillo.md`.
+**Generated `/admin/…` screens are open until you gate them** — wire
+`rastrillo/auth` (sign in with Keymail + magic-link fallback:
+`auth.New` at boot, `auth.Migrations`, `RequireSession` on
+`Options.Wrap`) before the app holds anything private, and say so in
+the README until you do.
 
 `rastrillo.Run` already speaks the platform's process contract — your
 binary accepts `--socket <path> --db <path>` and serves `GET /healthz`
