@@ -194,8 +194,11 @@ positions:
   stops a peer socket from forging them.
 
 **Choosing:** hosted-platform apps get console sign-in for free and
-should offer "Sign in with Keymail" before inventing anything —
-`rastrillo/auth` ships it (plus magic-link fallback) as of v0.6.0.
+should reach for `rastrillo/auth` before inventing anything — the
+family default: magic-link email that auto-upgrades to "Sign in with
+Keymail" when the address has a claimed inbox, so every address works.
+`rastrillo/password` is the classic email+password alternative, and
+step-up (`sessions.RequireFresh`) is the hardening seam.
 Server-blind apps: passkeys + PRF, and treat recovery as product
 surface. Server-trust apps: magic link + TOTP. Passkey RPs pin to a
 hostname — pick the credential origin deliberately and early (renaming
