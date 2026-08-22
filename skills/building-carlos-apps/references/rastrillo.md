@@ -50,15 +50,11 @@ framework supplies what is hard to get right twice:
 
 ## The ten-minute path
 
-No scaffold for this shape yet — five files, copied from
-`examples/notes` (SKILL.md §1 lists them):
-
 ```sh
-mkdir myapp && cd myapp && go mod init myapp
-go get github.com/carlosframework/rastrillo@latest \
-       github.com/go-chi/chi/v5 gorm.io/gorm
-# read SKILL.md, copy the five-file shape from examples/notes:
-#   internal/myapp/{models,app,handlers,render}.go  cmd/myapp/main.go
+go install github.com/carlosframework/rastrillo/cmd/rastrillo@latest
+rastrillo new myapp && cd myapp && go mod tidy && go test ./...
+# the scaffold is SKILL.md's five-file shape, tests passing out of
+# the box: internal/myapp/{models,app,handlers,render}.go, cmd/myapp/
 CGO_ENABLED=0 go build ./... && ./myapp -addr :8080
 ```
 
@@ -66,10 +62,9 @@ Verify with `go build ./...`, `go vet ./...`, `go test ./...` —
 `CGO_ENABLED=0` throughout (the stack is cgo-free by design; a cgo
 SQLite driver sneaking in is a bug).
 
-`rastrillo new` still scaffolds the **manifest-era** layout
-(actions/, manifest/, gen/) — the right starting point when you want
-the declarative path below front and centre; for the middle-layer
-shape, start from the five files.
+`rastrillo new` (v0.9.0+) scaffolds this shape directly; manifest/ is
+scaffolded empty with the declarative path's mounting recipe in its
+README. On an older CLI, copy the five files from `examples/notes`.
 
 ## The rules that keep the app safe (SKILL.md has the full set)
 
