@@ -35,8 +35,8 @@ framework supplies what is hard to get right twice:
 - Identity plugins: `auth` — the family default: magic-link email that
   **auto-upgrades to keymail** when the address resolves to a claimed
   inbox (classification fails open, so every address always has a
-  working path) — and `password` (stdlib PBKDF2, per-email rate
-  limiting). Either one's whole contract with the core is calling
+  working path) — and `password` (stdlib PBKDF2; per-email rate
+  limiting shared across sign-in and sign-up). Either one's whole contract with the core is calling
   `sessions.SignIn`; step-up hardening hangs on
   `sessions.RequireFresh`.
 - `csrf` (origin-checking, not tokens), `flash`, `form`, `view`,
@@ -46,7 +46,10 @@ framework supplies what is hard to get right twice:
   the golden-vectored satellite libraries.
 - The platform layer: `Resolve`/`Serve`/`Run` speak CARLOS activation
   (argv shapes, `LISTEN_FDS`, `$STATE_DIRECTORY`, `/healthz`,
-  `/api/version`, SIGTERM drain) so the app doesn't.
+  `/api/version`, SIGTERM drain) so the app doesn't — and Serve sets
+  baseline security headers (CSP, nosniff, frame-deny, referrer
+  policy) on every response; an app's own `Set` wins, `Options.CSP`
+  swaps the policy.
 
 ## The ten-minute path
 
