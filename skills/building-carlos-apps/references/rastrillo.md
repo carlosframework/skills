@@ -67,8 +67,9 @@ Verify with `go build ./...`, `go vet ./...`, `go test ./...` —
 SQLite driver sneaking in is a bug).
 
 `rastrillo new` still scaffolds the **manifest-era** layout
-(actions/, manifest/, gen/) — useful only if you want the admin add-on
-below as your starting point, not for the middle-layer shape.
+(actions/, manifest/, gen/) — the right starting point when you want
+the declarative path below front and centre; for the middle-layer
+shape, start from the five files.
 
 ## The rules that keep the app safe (SKILL.md has the full set)
 
@@ -82,19 +83,22 @@ below as your starting point, not for the middle-layer shape.
   `sessions.UserID` returns `(0, false)` there (Subject is an email),
   and dropping that `ok` scopes every query to uid 0.
 
-## Manifests are the admin add-on now
+## Manifests are the declarative path
 
-The manifest/codegen system (TOML resource → generated CRUD screens)
-is frozen, maintenance-only, and repositioned as an admin-panel
-generator. `examples/tickets` is its shape. Don't start a new app from
-it; bolt it onto an app that needs an admin screen set.
+The manifest system (TOML resource → generated CRUD screens) is an
+optional, equal alternative to hand-written handlers — mix the two per
+resource in one app, and move a resource between them freely (eject a
+generated file, or delete hand files and re-declare). Its vocabulary
+today covers standalone, unscoped tables (no per-user scoping yet), so
+user-owned data still takes the code path. `examples/tickets` is its
+shape.
 
 ## Copy from, in order
 
 1. `examples/notes` — the front-door example: accounts, sessions,
    CSRF, flash, one owner-scoped resource, and a two-user isolation
    test suite. This is the shape to imitate.
-2. `examples/tickets` — the manifest admin add-on, if you need it.
+2. `examples/tickets` — the declarative (manifest) path, per resource.
 
 Deploying: stamp
 `-ldflags "-X github.com/carlosframework/rastrillo.BuildVersion=<sha>"`

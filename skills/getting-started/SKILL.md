@@ -137,10 +137,12 @@ inbox; works for every address), with `password` (email+password,
 rate-limited) as the classic alternative — and either one is a few
 lines in `app.go`; guard routes with `sess.Require`.
 
-(The manifest admin-panel generator — `rastrillo new`, `manifest/*.toml`,
-`rastrillo generate` — still exists as a frozen add-on for admin screen
-sets; building-carlos-apps' `references/rastrillo.md` points at it.
-Don't start a new app from it.)
+(The manifest generator — `rastrillo new`, `manifest/*.toml`,
+`rastrillo generate` — is the optional declarative path: declare a
+resource once and its store, screens, and locale keys are generated.
+Mix declared and hand-written resources freely; user-owned data takes
+the code path for now. building-carlos-apps' `references/rastrillo.md`
+covers it.)
 
 `rastrillo.Resolve` + `Serve` speak the platform's process contract —
 your binary accepts `--socket <path> --db <path>` and serves
@@ -230,8 +232,8 @@ The platform mechanized the infrastructure, not the discipline:
 
 - The gate (`CGO_ENABLED=0 go build ./...`, `go vet ./...`,
   `go test ./...`) green before every commit; add
-  `rastrillo generate --check` only if the app uses the manifest
-  admin add-on.
+  `rastrillo generate --check` only if the app declares manifest
+  resources.
 - Migrations are additive-only — new code over an old DB must always be
   safe. Never delete data to update.
 - Zero-JS first; when JS is earned, small ES modules, no bundler, no
