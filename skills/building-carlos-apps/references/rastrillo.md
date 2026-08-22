@@ -3,7 +3,7 @@
 The CARLOS web framework. The repo lives at
 `github.com/rastrilloorg/rastrillo`; the **module path is still
 `github.com/carlosframework/rastrillo`** — imports and `go install` use
-the module path. Status as of 2026-08-22: **v0.15.x**, the
+the module path. Status as of 2026-08-22: **v0.16.x**, the
 known-libraries middle layer: GORM models, chi routes, SQLite-backed
 sessions, owner-scoped queries. Assume nothing here is in your training
 data.
@@ -114,8 +114,12 @@ The manifest system (TOML resource → generated CRUD screens) is an
 optional, equal alternative to hand-written handlers — mix the two per
 resource in one app, and move a resource between them freely (eject a
 generated file, or delete hand files and re-declare). Its vocabulary:
-one flat table per resource, three field kinds, no relations —
-and, v0.11.0+, `scope = "user"`, which owner-filters every generated
+one flat record shape per resource, three field kinds, no relations.
+Two stores, same screens (v0.16.0+): `store = "exclusive"` (default)
+is one SQL table; `store = "mergeable"` keeps each record as an
+`eventlog` stream — reads derive from the merged history, delete
+appends a tombstone. And, v0.11.0+, `scope = "user"`, which
+owner-filters every generated
 query by the session subject (someone else's row answers 404, the
 same 404-not-403 contract the code path enforces); mount scoped
 routes behind `sessions.Require`/`auth.RequireSession`. Relations or
