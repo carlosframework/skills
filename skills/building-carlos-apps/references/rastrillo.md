@@ -68,6 +68,10 @@ README. On an older CLI, copy the five files from `examples/notes`.
 
 ## The rules that keep the app safe (SKILL.md has the full set)
 
+- Tenancy is the platform's, not the schema's: a CARLOS app serves one
+  team. A product with many teams gives each team its own hibernating
+  instance — isolation by process and file, never by WHERE clause.
+  Scoping separates the *users* within one instance.
 - Every query touching user-owned rows goes through
   `scope.Owned(g, uid)` — reads AND writes, inside transactions too
   (scope `tx`, never the outer handle, or the 1-connection writer pool
