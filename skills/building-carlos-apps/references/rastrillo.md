@@ -83,6 +83,18 @@ README. On an older CLI, copy the five files from `examples/notes`.
   account must complete an assertion (a pending half-session between
   factors) before any session exists; unenrolled accounts sign in
   unchanged.
+- Background work (v0.12.0+): never leave a button's goroutine
+  unobservable. `jobs.New` → `Start(owner, name, location, fn)` with
+  owner = the session Subject; 303 the POST to `/jobs/{id}` and mount
+  `jobs.NewHandlers`' `StatusPage`/`Fragment` behind `sessions.Require`
+  at `/jobs/{id}` and `/jobs/{id}/fragment` (foreign id 404s). The
+  status page works with scripts off (`noscript` meta refresh only
+  while running); the scaffolded, app-owned `static/rastrillo.js`
+  polls the fragment for the smooth version — `data-poll` on the
+  fragment's root, `data-busy` on the form. `location` must be a
+  server-built path, never user input (the shim navigates to it). The
+  registry is in-memory and unbounded per owner — a deploy ends
+  running jobs; design them idempotent.
 
 ## Manifests are the declarative path
 
@@ -102,8 +114,8 @@ handlers.
 ## Copy from, in order
 
 1. `examples/notes` — the front-door example: accounts, sessions,
-   CSRF, flash, one owner-scoped resource, and a two-user isolation
-   test suite. This is the shape to imitate.
+   CSRF, flash, owner-scoped resources, a background export job, and a
+   two-user isolation test suite. This is the shape to imitate.
 2. `examples/tickets` — the declarative (manifest) path, per resource.
 
 Deploying: stamp
