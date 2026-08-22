@@ -104,12 +104,12 @@ to follow literally instead of framework source. The worked reference
 is `examples/notes`.
 
 ```sh
-mkdir myapp && cd myapp && go mod init myapp
-go get github.com/carlosframework/rastrillo@latest \
-       github.com/go-chi/chi/v5 gorm.io/gorm
+go install github.com/carlosframework/rastrillo/cmd/rastrillo@latest
+rastrillo new myapp && cd myapp && go mod tidy && go test ./...
 ```
 
-Five files, copied from `examples/notes` (SKILL.md §1):
+The scaffold is SKILL.md's five-file shape, tests passing before you
+write a line:
 
 ```
 internal/myapp/models.go     plain GORM structs
