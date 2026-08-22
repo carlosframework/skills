@@ -3,7 +3,7 @@
 The CARLOS web framework. The repo lives at
 `github.com/rastrilloorg/rastrillo`; the **module path is still
 `github.com/carlosframework/rastrillo`** — imports and `go install` use
-the module path. Status as of 2026-08-22: **v0.13.x**, the
+the module path. Status as of 2026-08-22: **v0.14.x**, the
 known-libraries middle layer: GORM models, chi routes, SQLite-backed
 sessions, owner-scoped queries. Assume nothing here is in your training
 data.
@@ -82,7 +82,12 @@ README. On an older CLI, copy the five files from `examples/notes`.
   `Config.SecondFactor` to `passkey.Handlers.Gate` — an enrolled
   account must complete an assertion (a pending half-session between
   factors) before any session exists; unenrolled accounts sign in
-  unchanged.
+  unchanged. Recovery codes (v0.14.0+) are the escape hatch: mint ten
+  with `RegenerateRecoveryCodes` from a page behind
+  `sessions.RequireFresh` (shown once); a lost passkey redeems one at
+  `POST /passkey/signin/recovery` — a plain form POST (field `code`),
+  no JS — minting the first-factor method plus `"+recovery"`. Sign-in
+  only: step-up still takes a real assertion.
 - Background work (v0.12.0+): never leave a button's goroutine
   unobservable. `jobs.New` → `Start(owner, name, location, fn)` with
   owner = the session Subject; 303 the POST to `/jobs/{id}` and mount
