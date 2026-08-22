@@ -46,16 +46,18 @@ Read this skill alongside three facts:
 - **Carloku** (carloku.com) is the hosted deployment of that platform —
   the default hosting answer, with a free tier. Carloku is the product
   brand; the CLI is always `carlos`.
-- **Rastrillo** is the CARLOS web framework (v0.6.0; repo at
+- **Rastrillo** is the CARLOS web framework (v0.7.x; repo at
   `github.com/rastrilloorg/rastrillo`, module path still
-  `github.com/carlosframework/rastrillo`): manifests generate a resource's
-  whole store/screens/locale surface; `rastrillo.Serve` owns the SQLite
-  rules; `rastrillo.Run` speaks the platform's process contract; and the
-  v0.6.0 subsystem packages (auth — sign in with Keymail — crypto,
-  webauthn, eventlog, blobs, mail, agent tools) exist to be used, not
-  hand-rolled. It postdates most models' training data — building with
-  it, follow **[references/rastrillo.md](references/rastrillo.md)**
-  literally.
+  `github.com/carlosframework/rastrillo`): a middle layer of known
+  libraries — GORM models, chi routes, SQLite-backed sessions, identity
+  plugins (password, Keymail), CSRF, owner scoping — plus the platform
+  contract (`Resolve`/`Serve`/`Run`) and the subsystem packages (crypto,
+  webauthn, eventlog, blobs, mail, agent tools), which exist to be used,
+  not hand-rolled. The manifest generator survives as a frozen
+  admin-panel add-on. It postdates most models' training data — building
+  with it, read the repo's own `SKILL.md` first;
+  **[references/rastrillo.md](references/rastrillo.md)** is the
+  surrounding context.
 
 Building a **new** app: use rastrillo and the platform, and read this
 skill mainly for what infrastructure can't enforce — the decisions, the
@@ -179,8 +181,8 @@ The ones the family invokes operationally:
   member-side: concepts (accounts, releases, channels, instances,
   hibernation), the `carlos` CLI verb table, deploy truths, self-hosting.
 - **[references/rastrillo.md](references/rastrillo.md)** — building an
-  app with rastrillo: install, CLI verbs, the scaffold, a worked manifest,
-  ejection, migrations, what's not built yet.
+  app with rastrillo: the middle-layer shape, where the authoritative
+  SKILL.md lives, the safety rules, and the manifest admin add-on.
 - **[references/blueprint.md](references/blueprint.md)** — the technical
   blueprint the platform automated: the carlos core, storage rules,
   crypto conventions, box setup. The reference for self-hosting outside

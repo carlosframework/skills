@@ -36,17 +36,17 @@ The pieces, named once:
 |---|---|---|
 | Language / framework | Go + rastrillo, one static binary | The family stack; the framework enforces the SQLite and money rules for you |
 | App shape | Server-rendered HTML, zero-JS baseline | The family default; the other shape is a decision (building-carlos-apps) |
-| Storage | SQLite via rastrillo manifests | Additive migrations and pragma ordering handled by `rastrillo.Serve` |
-| Amounts | `kind = "money"`, integer cents | A float never touches an amount |
+| Storage | SQLite via GORM (`rastrillo/db`) | cgo-free driver, WAL pragma order, writer/reader pools — `db.Open` owns all of it; migrations via `AutoMigrate`, additive-only |
+| Amounts | integer cents (`form.ParseCents`) | A float never touches an amount |
 | Hosting | Carloku, `<app>.<sqid>.oncarlos.com` | Zero infra to run; certs, replication, hibernation all platform-side |
 | Versioning | git short sha (`v1` is fine for the very first ship) | House convention |
-| Channel | `edge` | A fresh app has no production flag, so **edge IS production** (Paul, 2026-08-19); the higher rungs (`beta`, `stable`) record sign-off and start mattering only when the app is flagged production |
+| Channel | `stable` (the instance default) | Fresh apps promote straight there; ceremony arrives only with the production flag |
 | Trust model | Honest server: app data is server-readable, and the README says so | See "The one decision you must still record" below |
 
 ## The one decision you must still record
 
 The family default is server-blindness ("if the server is compromised,
-the attacker gets nothing"), and rastrillo v0.6.0 ships the family
+the attacker gets nothing"), and rastrillo ships the family
 envelope (`rastrillo/crypto`) — but E2EE is an architecture, not a
 package import: key custody, recovery, and search all become product
 surface. The honest default for a first app is
@@ -94,70 +94,59 @@ wrong.
 
 **Static site?** You are nearly done — skip to "The static path" below.
 
-## Step 2 — scaffold with rastrillo
+## Step 2 — the five-file rastrillo app
+
+**Read rastrillo's `SKILL.md` first** (repo root of
+`github.com/rastrilloorg/rastrillo`, or
+`$(go env GOMODCACHE)/github.com/carlosframework/rastrillo@<version>/SKILL.md`
+once the module is downloaded). It is the app story in ~15KB — the file
+to follow literally instead of framework source. The worked reference
+is `examples/notes`.
 
 ```sh
-go install github.com/carlosframework/rastrillo/cmd/rastrillo@latest
-rastrillo new myapp && cd myapp && go mod tidy
-go get -tool github.com/sqlc-dev/sqlc/cmd/sqlc   # once, for manifest resources
+mkdir myapp && cd myapp && go mod init myapp
+go get github.com/carlosframework/rastrillo@latest \
+       github.com/go-chi/chi/v5 gorm.io/gorm
 ```
 
-Declare each resource once in `manifest/<resource>.toml` and let the
-generator produce its store, screens, and locale keys:
+Five files, copied from `examples/notes` (SKILL.md §1):
 
-```toml
-name  = "posts"
-route = "/admin/posts"
-store = "exclusive"   # the ordinary single-owner table shape (the only other, "mergeable", isn't built)
-
-[list]
-columns = [{ field = "Title" }, { field = "Status" }]
-search  = true
-
-[form]
-basics = [{ name = "Title", required = true }, { name = "Status" }]
 ```
-
-```sh
-rastrillo generate      # writes gen/ — committed, NEVER hand-edited
-rastrillo dev           # watch loop: regenerate + rebuild + restart on save
+internal/myapp/models.go     plain GORM structs
+internal/myapp/app.go        AutoMigrate, sessions, identity plugin, chi router
+internal/myapp/handlers.go   the owner-scoped CRUD
+internal/myapp/render.go     embedded templates, flash/session-aware pages
+cmd/myapp/main.go            Resolve -> db.Open -> App -> Serve
 ```
 
 The gate, before every commit:
 
 ```sh
-go build ./... && go vet ./... && go test ./... && rastrillo generate --check
+CGO_ENABLED=0 go build ./... && go vet ./... && go test ./...
 ```
 
-(If hand actions under bracketed paths ever make the `./...` forms choke —
-one app hit this on v0.5.0 — scope them: `go build ./cmd/myapp`,
-`go test ./internal/...`, and record the scoped gate in the app's
-CLAUDE.md.)
+The three rules that keep the app safe (SKILL.md has the full set):
+every query touching user-owned rows goes through `scope.Owned` —
+reads AND writes, transactions included (a row that isn't yours 404s,
+never 403s); never bind a request body onto a GORM model (explicit
+`map[string]any` + `.Select` allowlist); sessions/CSRF are defaults
+you opt out of, not machinery you assemble. Accounts come from an
+identity plugin — the family default is `auth` (magic-link email that
+auto-upgrades to sign-in-with-Keymail when the address has a claimed
+inbox; works for every address), with `password` (email+password,
+rate-limited) as the classic alternative — and either one is a few
+lines in `app.go`; guard routes with `sess.Require`.
 
-Field kinds are plain text (the default), `textarea`, and `money`
-(integer cents — see the worked ticket example in building-carlos-apps'
-`references/rastrillo.md`). Richer kinds don't exist yet: a
-constrained-vocabulary field is plain text plus your own validation, and
-relations between resources are hand actions today — don't invent
-manifest syntax.
+(The manifest admin-panel generator — `rastrillo new`, `manifest/*.toml`,
+`rastrillo generate` — still exists as a frozen add-on for admin screen
+sets; building-carlos-apps' `references/rastrillo.md` points at it.
+Don't start a new app from it.)
 
-Hand-written pages are files under `actions/` (filesystem-routed:
-`actions/admin/posts/[id]/publish.POST.go` → `POST /admin/posts/{id}/publish`;
-`GET` and `POST` only — screens are zero-JS HTML, mutations are form
-posts). To customize one generated file, copy it to the hand path named
-in its own header comment and edit the copy — never edit `gen/`. The
-full recipe (ejection, migrations, worked examples, the v0.6.0
-subsystem packages) is building-carlos-apps' `references/rastrillo.md`.
-**Generated `/admin/…` screens are open until you gate them** — wire
-`rastrillo/auth` (sign in with Keymail + magic-link fallback:
-`auth.New` at boot, `auth.Migrations`, `RequireSession` on
-`Options.Wrap`) before the app holds anything private, and say so in
-the README until you do.
-
-`rastrillo.Run` already speaks the platform's process contract — your
-binary accepts `--socket <path> --db <path>` and serves `GET /healthz`
-and `GET /api/version`. **There is no `$PORT`**; instances listen on
-unix sockets the platform hands them. Do not hand-roll flag parsing.
+`rastrillo.Resolve` + `Serve` speak the platform's process contract —
+your binary accepts `--socket <path> --db <path>` and serves
+`GET /healthz` and `GET /api/version`. **There is no `$PORT`**;
+instances listen on unix sockets the platform hands them. Do not
+hand-roll flag parsing.
 
 ## Step 3 — first deploy
 
@@ -165,9 +154,8 @@ Provision the instance (once), build for the boxes, deploy:
 
 ```sh
 carlos instances enable -app myapp          # opt-in; console pins your <sqid> domain
-carlos instances create -app myapp -host myapp.<sqid>.oncarlos.com -channel edge
-# substitute your real sqid (carlos auth whoami shows it) — the host is typed in full;
-# -channel edge is deliberate: the CLI's default is stable, but edge is the serving rung
+carlos instances create -app myapp -host myapp.<sqid>.oncarlos.com
+# substitute your real sqid (carlos auth whoami shows it) — the host is typed in full
 
 GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build \
   -ldflags "-X github.com/carlosframework/rastrillo.BuildVersion=$(git rev-parse --short HEAD)" \
@@ -181,8 +169,7 @@ The platform's boxes are **linux/arm64** — build exactly that, statically
 
 `carlos deploy` is ship + promote + watch in one motion: it uploads an
 immutable release, promotes it to the channel your instance follows
-(`edge` in this recipe — for a fresh app, edge is production), then
-polls until the URL's `X-Carlos-Version`
+(`stable` by default), then polls until the URL's `X-Carlos-Version`
 header reports the shipped build, and prints `live https://…`. On first
 run it offers to remember the artifact path in `.carlos/config`
 (commit that file); after that, releasing is just `carlos deploy`, no
@@ -194,7 +181,7 @@ No instance, no binary — ship the directory and promote:
 
 ```sh
 carlos ship -kind static -version v1 ./public
-carlos promote v1 edge
+carlos promote v1 stable
 # or in one motion: carlos deploy -kind static ./public
 ```
 
@@ -227,7 +214,7 @@ Two traps, both paid for:
 | Secret | `carlos secrets set -app myapp KEY=value` (sealed, never printed) |
 | Tail logs | `carlos logs -app myapp -f` |
 | Bounce the process | `carlos restart -app myapp` |
-| Undo a release | `carlos rollback -app myapp edge` |
+| Undo a release | `carlos rollback -app myapp stable` |
 | List releases | `carlos releases -app myapp` |
 | Custom domain | `carlos domains attach -app myapp www.example.com` — it tells you the DNS records to create; certs are automatic once DNS points at the platform |
 
@@ -241,8 +228,10 @@ of those, stop — you are rebuilding the platform under your app.
 
 The platform mechanized the infrastructure, not the discipline:
 
-- The gate (`go build ./...`, `go vet ./...`, `go test ./...`,
-  `rastrillo generate --check`) green before every commit.
+- The gate (`CGO_ENABLED=0 go build ./...`, `go vet ./...`,
+  `go test ./...`) green before every commit; add
+  `rastrillo generate --check` only if the app uses the manifest
+  admin add-on.
 - Migrations are additive-only — new code over an old DB must always be
   safe. Never delete data to update.
 - Zero-JS first; when JS is earned, small ES modules, no bundler, no
@@ -257,9 +246,10 @@ The full working conventions are building-carlos-apps'
 
 | Mistake | Reality |
 |---|---|
-| Reading `$PORT` and calling `http.ListenAndServe` | The contract is `--socket <path> --db <path>` on a unix socket. `rastrillo.Run` handles it; hand-rolled servers must too. |
+| Reading `$PORT` and calling `http.ListenAndServe` | The contract is `--socket <path> --db <path>` on a unix socket. `rastrillo.Resolve`+`Serve` handle it; hand-rolled servers must too. |
 | Building for the local machine | Boxes are linux/arm64. `GOOS=linux GOARCH=arm64 CGO_ENABLED=0`, always. |
-| Editing files under `gen/` | Regenerated and checked (`generate --check` fails on hand edits). Eject to the hand path instead. |
+| A bare `First(&x, id)` on a user-owned row | Every such query goes through `scope.Owned` — reads, writes, and transactions alike. The isolation test suite in `examples/notes` is the regression guard to copy. |
+| Binding a form onto a GORM model | Mass assignment. Explicit `map[string]any` + `.Select` allowlist, per SKILL.md. |
 | Hand-rolling a router, certs, or Litestream | Platform's job. Your app is one binary on one socket. |
 | Verifying with a 200 or a cached DNS answer | Only `X-Carlos-Version` is proof, on the canonical host, after the deploy watch. |
 | Waiting for an SSH step that never comes | Every step is a `carlos` command. A step that needs box access is a wrong turn (or a product gap to file — not a workaround to build). |
