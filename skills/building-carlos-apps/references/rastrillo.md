@@ -74,19 +74,30 @@ README. On an older CLI, copy the five files from `examples/notes`.
   deadlocks). A row that isn't yours 404s, never 403s.
 - Never bind a request body onto a GORM model: explicit
   `map[string]any` + `.Select` allowlist.
-- With the keymail plugin, read the viewer with `auth.From(r)` —
-  `sessions.UserID` returns `(0, false)` there (Subject is an email),
-  and dropping that `ok` scopes every query to uid 0.
+- With the keymail plugin, read the viewer with `auth.From(r)` or
+  `sessions.Current(r)` (v0.11.0+: `RequireSession` stashes both) —
+  but never `sessions.UserID`: it returns `(0, false)` for an email
+  Subject, and dropping that `ok` scopes every query to uid 0.
+- Sign-in-time passkey 2FA (v0.11.0+): set the identity plugin's
+  `Config.SecondFactor` to `passkey.Handlers.Gate` — an enrolled
+  account must complete an assertion (a pending half-session between
+  factors) before any session exists; unenrolled accounts sign in
+  unchanged.
 
 ## Manifests are the declarative path
 
 The manifest system (TOML resource → generated CRUD screens) is an
 optional, equal alternative to hand-written handlers — mix the two per
 resource in one app, and move a resource between them freely (eject a
-generated file, or delete hand files and re-declare). Its vocabulary
-today covers standalone, unscoped tables (no per-user scoping yet), so
-user-owned data still takes the code path. `examples/tickets` is its
-shape.
+generated file, or delete hand files and re-declare). Its vocabulary:
+one flat table per resource, three field kinds, no relations —
+and, v0.11.0+, `scope = "user"`, which owner-filters every generated
+query by the session subject (someone else's row answers 404, the
+same 404-not-403 contract the code path enforces); mount scoped
+routes behind `sessions.Require`/`auth.RequireSession`. Relations or
+custom flows: hand-write. `examples/tickets` is the manifest-only
+shape; `examples/notes` mixes a declared, scoped resource beside hand
+handlers.
 
 ## Copy from, in order
 

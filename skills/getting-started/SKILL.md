@@ -139,10 +139,10 @@ lines in `app.go`; guard routes with `sess.Require`.
 
 (The manifest generator — `rastrillo new`, `manifest/*.toml`,
 `rastrillo generate` — is the optional declarative path: declare a
-resource once and its store, screens, and locale keys are generated.
-Mix declared and hand-written resources freely; user-owned data takes
-the code path for now. building-carlos-apps' `references/rastrillo.md`
-covers it.)
+resource once and its store, screens, and locale keys are generated;
+`scope = "user"` (v0.11.0+) owner-filters the generated queries for
+user-owned resources. Mix declared and hand-written resources freely.
+building-carlos-apps' `references/rastrillo.md` covers it.)
 
 `rastrillo.Resolve` + `Serve` speak the platform's process contract —
 your binary accepts `--socket <path> --db <path>` and serves
