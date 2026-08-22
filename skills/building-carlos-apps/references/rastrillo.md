@@ -3,7 +3,7 @@
 The CARLOS web framework. The repo lives at
 `github.com/rastrilloorg/rastrillo`; the **module path is still
 `github.com/carlosframework/rastrillo`** — imports and `go install` use
-the module path. Status as of 2026-08-22: **v0.7.x**, the
+the module path. Status as of 2026-08-22: **v0.13.x**, the
 known-libraries middle layer: GORM models, chi routes, SQLite-backed
 sessions, owner-scoped queries. Assume nothing here is in your training
 data.
@@ -93,8 +93,12 @@ README. On an older CLI, copy the five files from `examples/notes`.
   polls the fragment for the smooth version — `data-poll` on the
   fragment's root, `data-busy` on the form. `location` must be a
   server-built path, never user input (the shim navigates to it). The
-  registry is in-memory and unbounded per owner — a deploy ends
-  running jobs; design them idempotent.
+  registry is in-memory and bounded (v0.13.0+): `Start` returns
+  `(Job, error)` — `ErrOwnerBusy` past four Running jobs per owner,
+  answered with your own flash copy — and fn's context expires after
+  fifteen minutes, the job reading Failed from then on. Honor the
+  context, and design jobs idempotent: a deploy still ends them
+  mid-flight.
 
 ## Manifests are the declarative path
 
