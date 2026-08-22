@@ -3,7 +3,7 @@
 The CARLOS web framework. The repo lives at
 `github.com/rastrilloorg/rastrillo`; the **module path is still
 `github.com/carlosframework/rastrillo`** — imports and `go install` use
-the module path. Status as of 2026-08-22: **v0.14.x**, the
+the module path. Status as of 2026-08-22: **v0.15.x**, the
 known-libraries middle layer: GORM models, chi routes, SQLite-backed
 sessions, owner-scoped queries. Assume nothing here is in your training
 data.
@@ -96,7 +96,10 @@ README. On an older CLI, copy the five files from `examples/notes`.
   status page works with scripts off (`noscript` meta refresh only
   while running); the scaffolded, app-owned `static/rastrillo.js`
   polls the fragment for the smooth version — `data-poll` on the
-  fragment's root, `data-busy` on the form. `location` must be a
+  fragment's root, `data-busy` on the form. v0.15.0+: also mount
+  `Events` at `/jobs/{id}/events` and pass `PageData.EventsPath` as
+  the partial's `PushURL` — the shim rides Server-Sent Events where
+  the browser supports them and falls back to polling on its own. `location` must be a
   server-built path, never user input (the shim navigates to it). The
   registry is in-memory and bounded (v0.13.0+): `Start` returns
   `(Job, error)` — `ErrOwnerBusy` past four Running jobs per owner,
