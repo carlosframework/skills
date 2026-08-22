@@ -53,8 +53,8 @@ Read this skill alongside three facts:
   plugins (password, Keymail), CSRF, owner scoping — plus the platform
   contract (`Resolve`/`Serve`/`Run`) and the subsystem packages (crypto,
   webauthn, eventlog, blobs, mail, agent tools), which exist to be used,
-  not hand-rolled. The manifest generator survives as a frozen
-  admin-panel add-on. It postdates most models' training data — building
+  not hand-rolled. The manifest generator is the optional declarative
+  path beside hand-written handlers. It postdates most models' training data — building
   with it, read the repo's own `SKILL.md` first;
   **[references/rastrillo.md](references/rastrillo.md)** is the
   surrounding context.
@@ -182,7 +182,7 @@ The ones the family invokes operationally:
   hibernation), the `carlos` CLI verb table, deploy truths, self-hosting.
 - **[references/rastrillo.md](references/rastrillo.md)** — building an
   app with rastrillo: the middle-layer shape, where the authoritative
-  SKILL.md lives, the safety rules, and the manifest admin add-on.
+  SKILL.md lives, the safety rules, and the declarative manifest path.
 - **[references/blueprint.md](references/blueprint.md)** — the technical
   blueprint the platform automated: the carlos core, storage rules,
   crypto conventions, box setup. The reference for self-hosting outside
