@@ -31,6 +31,10 @@ apt, static binaries) and Windows (client-only zip — no self-replace,
 - **Deploy verification** — the edge stamps `X-Carlos-Version` per
   versioned route (only after the instance actually restarted);
   `carlos deploy` watches it.
+- **Outbound email** — the platform mints a sending identity on a domain,
+  publishes DKIM/SPF/DMARC where it controls the zone, and delivers working
+  SMTP credentials as config. Apps never hold an AWS key and nobody runs an
+  MTA. See "Sending email" below.
 
 ## Concepts
 
@@ -102,6 +106,7 @@ apt, static binaries) and Windows (client-only zip — no self-replace,
 | `carlos logs` | Merged app + platform + edge timeline (`-f` follows, `-grep`, `-since`) — no box access |
 | `carlos domains attach\|detach\|list` | Claim customer hostnames (`-wildcard`, `-catchall`); prints the DNS records to create; certs follow automatically |
 | `carlos store create\|status\|rotate` | Declare object storage; credentials arrive as env; member-driven key rotation |
+| `carlos email enable\|status\|test\|domains\|credentials\|rotate` | Declare sending; provision a verified domain; SMTP credentials arrive as env (`pause`/`resume` are a deployment operator's) |
 | `carlos ledger append\|publish\|verify` | Open hash-chained per-app ledgers (the transparency machinery) |
 | `carlos accounts create\|list\|migrate` | Mint/list accounts; move an app between them |
 | `carlos fleets create\|add-box\|rotate-token\|…` | Bring-your-own-boxes fleets that dial the console |
@@ -112,6 +117,68 @@ Box-side verbs exist (`edge`, `agent`, `adopt`, `route`, `add`, `ops`,
 `bootstrap`) but they are the *operator's* surface for running a platform
 deployment — a member never types them, and an agent reaching for them on
 a member task has taken a wrong turn.
+
+## Sending email
+
+The platform issues SMTP credentials. An app declares that it sends, the
+console provisions an SES identity for a domain, publishes the DNS records
+where it controls the zone, and delivers working credentials as config. The
+app never holds a cloud key and nobody runs an MTA.
+
+One command does the whole walk — declare, provision the domain, wait for
+verification, deliver:
+
+```
+carlos email enable -app <app>
+```
+
+The identity defaults to the app's **own host**
+(`<app>.<sqid>.oncarlos.com`), so the signing domain matches the domain of
+the links inside the mail. Credentials arrive as env —
+`CARLOS_SMTP_HOST`, `_PORT`, `_USER`, `_PASS`, `_FROM` (rename the set with
+`-env-prefix`). Transport is submission on 587 with STARTTLS.
+
+For a customer's own domain:
+
+```
+carlos email enable -app <app> -domain mail.example.com
+```
+
+On the platform domain CARLOS publishes the records itself. On a custom
+domain it prints the record set for the zone's owner to publish, then polls
+until SES confirms it (`-timeout`, default 10m; a gave-up wait exits
+non-zero and names what SES is still waiting for).
+
+Then:
+
+| Verb | What it does |
+|---|---|
+| `carlos email status -app <app>` | What is declared, which domains verified, what was delivered |
+| `carlos email test -app <app> -to me@example.com` | Sends a REAL message through a throwaway credential, then revokes it |
+| `carlos email credentials create\|list\|revoke` | Standalone credentials for something not running on CARLOS; the password is shown **once** |
+| `carlos email rotate -app <app> [-finish]` | Two-phase key rotation — new key delivered, then the old one retired |
+
+### Three things that will bite
+
+- **A freshly minted credential does not work for the first minute or
+  two.** SES's SMTP endpoint does not see a new IAM access key
+  immediately, and the symptom is `535 Authentication Credentials Invalid`
+  — which reads exactly like a wrong password and is not one. Wait and
+  retry. An app's first sends straight after `enable` hit this too, so do
+  not diagnose a broken credential from the first minute of logs.
+- **DMARC alignment rests on DKIM alone.** Records are published with
+  `adkim=s; aspf=s`, and that strictness is what stops one tenant's
+  signature authenticating another tenant's From address on a shared
+  domain. SPF authenticates but does **not** align: the envelope sender is
+  a region-qualified subdomain (`mail-<region>.<domain>`), which strict
+  alignment treats as a different domain. DMARC therefore passes on the
+  DKIM rail only. That is normal for SES — but it means DKIM is the single
+  rail, so never turn off DKIM signing on a sending identity.
+- **The MAIL FROM subdomain carries its region forever.** It is fixed at
+  the first verification (`mail-eu-west-1.<domain>`). On a custom domain
+  that record lives in the customer's zone — the one record CARLOS cannot
+  republish for them — so moving regions later means going back to the
+  customer for a DNS change.
 
 ## Deploy truths (each paid for at least once)
 

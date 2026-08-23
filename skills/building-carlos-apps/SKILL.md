@@ -164,6 +164,7 @@ The ones the family invokes operationally:
 | Frontend | Two shapes, chosen deliberately: `server` (server-rendered, zero-JS baseline — the default) or `client` (Woodstar's shape) — see decisions.md §2 |
 | JS discipline | 300-line module cap enforced by test, ratchet-down only; VanJS (vendored) the one sanctioned reactive dependency |
 | Routing, TLS, replication, hibernation, restarts | The platform's job — see platform.md; hand-rolled only off-platform (blueprint.md) |
+| Outbound email | `carlos email enable` — the platform mints the sending identity, publishes DKIM/SPF/DMARC, delivers SMTP credentials as env; never run an MTA or hold a cloud mail key — platform.md |
 | Hosting | Carloku hosted (default) / customer fleets / self-hosted platform — decisions.md §3 |
 | Deploys | `carlos deploy`: ship + promote + watch `X-Carlos-Version` until live; verify against the thing you changed with the binary you built |
 | Identity | "Sign in with Keymail" / passkeys+PRF / magic link+TOTP by trust model — decisions.md §4 |
@@ -179,7 +180,9 @@ The ones the family invokes operationally:
   positions, recorded reasons, and a decision guide.
 - **[references/platform.md](references/platform.md)** — the platform
   member-side: concepts (accounts, releases, channels, instances,
-  hibernation), the `carlos` CLI verb table, deploy truths, self-hosting.
+  hibernation), the `carlos` CLI verb table, sending email (SMTP
+  credentials, DKIM/DMARC alignment, the credential-propagation trap),
+  deploy truths, self-hosting.
 - **[references/rastrillo.md](references/rastrillo.md)** — building an
   app with rastrillo: the middle-layer shape, where the authoritative
   SKILL.md lives, the safety rules, and the declarative manifest path.
