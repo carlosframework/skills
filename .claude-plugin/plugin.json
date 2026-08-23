@@ -1,7 +1,7 @@
 {
   "name": "carlos",
   "description": "Build apps on the CARLOS architecture \u2014 Cost-efficient, Available, Replicated, Lightweight, Open, Secure.",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "homepage": "https://carlosframework.com",
   "author": {
     "name": "Paul Campbell"
