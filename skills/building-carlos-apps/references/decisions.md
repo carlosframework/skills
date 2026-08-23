@@ -78,7 +78,12 @@ plaintext column is a plaintext leak. The envelope mechanics for sealed
 content (HKDF purpose keys, ECDH → AES-GCM, ECIES-wrapped per-thread/
 content keys — which is also how a sealed object gains a second named
 reader) are blueprint.md's crypto section; golden vectors pin every
-implementation.
+implementation. **Honesty note (2026-08-23): rastrillo does not yet
+properly support the E2EE use-case as an app story** — its crypto and
+webauthn packages are primitives, and framework-level support is being
+worked on now. A server-blind app today hand-builds the app-side flow
+on the Keymail/Kass/Woodstar patterns; don't claim the framework does
+it.
 
 ## 2. App shape — server-rendered or client-owned?
 

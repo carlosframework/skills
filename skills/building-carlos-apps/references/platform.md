@@ -8,8 +8,10 @@ nothing but the CLI and a browser. If a task seems to need a box, either
 you are self-hosting and operating the platform itself, or you have found
 a product gap to file — never a workaround to build.
 
-Snapshot date 2026-08-17; verbs are stable, flag details evolve — trust
-`carlos <verb> -h` over this file.
+Snapshot date 2026-08-23; verbs are stable, flag details evolve — trust
+`carlos <verb> -h` over this file. The CLI ships for macOS/Linux (brew,
+apt, static binaries) and Windows (client-only zip — no self-replace,
+`carlos update` defers to a fresh download).
 
 ## What the platform owns (never hand-roll these)
 
@@ -40,18 +42,29 @@ Snapshot date 2026-08-17; verbs are stable, flag details evolve — trust
 - **Release** — immutable, content-addressed, produced by `carlos ship`.
   Kinds: `binary` (default) and `static`. Versions are free-form; git
   short sha is the house convention.
-- **Channel ladder** — `canary → edge → beta → stable`, climbed by
-  `carlos promote`. Reaching `stable` cuts a semver tag; `-hotfix`
-  bypasses the ladder (recorded, not forbidden). `canary/<slug>`
-  side-channels are per-session dead ends. **The serving rung is
-  `edge`** (Paul's ruling, 2026-08-19): for an app with no production
-  flag, edge *is* production, and climbing to `beta`/`stable` records
-  human sign-off rather than gating what anyone can see. Instances can
-  be wired to follow other channels — `carlos channels` shows what
-  actually serves — but edge-serves is the family story.
-- **Production flag** — a flagged app gets bake windows on promotion and
-  console passkey step-up for the sensitive moves; unflagged apps
-  promote freely. Ceremony is opt-in per app, not per channel.
+- **Channels and pipelines** (release pipelines v2, live 2026-08-22) —
+  **a new app is born with one channel, named `edge` by default**
+  (renameable at creation): that is its production, and `carlos deploy`
+  lands on it. Multi-channel ceremony is opt-in: a console-mediated
+  **pipeline** declares an ordered channel list (names are app-defined;
+  promotion onto channel N must come from N−1; the first is the entry
+  channel) with per-channel, default-permissive policy — `bake`
+  duration, `passkey` step-up, `promote_approvals`, and
+  `change_approvals` (which also guards editing/removing the channel
+  and fast-tracking through its bake). `canary/<slug>` stays a reserved
+  platform namespace outside any pipeline: always allowed, zero bake,
+  per-session dead ends. Apps with no pipeline keep the legacy frozen
+  ladder (`edge → beta → stable`, holds 0/24h/72h, unconditional
+  passkey on stable — reaching stable cuts a semver tag; `-hotfix`
+  bypasses, recorded). Box-side, bake changes **ratchet**: a shorter
+  window is honoured only after the previously-known window has elapsed
+  once on the box's own clock, so a compromised console session cannot
+  collapse a hold and ship in the same hour.
+- **Production flag** — legacy: superseded by per-channel pipeline rules
+  for pipelined apps, still honoured by legacy boxes/apps. Its sharp
+  edge is recorded: a stable promote plus the console's default-checked
+  safety delay once left a hibernating app unwakeable for days —
+  ceremony belongs on channels you chose, not on defaults.
 - **Instance** — one account's running process for an app on a host.
   Declared console-side (`carlos instances enable` once per app, then
   `instances create -host …`); a box reconciler mints the actual route.
@@ -76,7 +89,7 @@ Snapshot date 2026-08-17; verbs are stable, flag details evolve — trust
 |---|---|
 | `carlos auth login\|whoami\|logout\|default` | Device-code login (approve in any signed-in browser); identity + memberships; per-project default console |
 | `carlos apps create\|place\|delete\|restore` | Claim an app; place it on a customer fleet; trash/restore |
-| `carlos ship` | Publish an immutable release (`-kind binary\|static`, `-version`, `-notes`) |
+| `carlos ship` | Publish an immutable release (`-kind binary\|static`, `-version`, `-notes`); rate-limited per app (~2/minute — a 429 carries `Retry-After`) |
 | `carlos promote` | Move a version up the ladder (`-hotfix` to bypass, recorded) |
 | `carlos deploy` | ship + promote + watch `X-Carlos-Version` until live — the one-command release; zero-arg with a saved project config |
 | `carlos rollback` | Point a channel back at an earlier version |
@@ -101,10 +114,10 @@ a member task has taken a wrong turn.
 
 ## Deploy truths (each paid for at least once)
 
-- **`carlos deploy` is the release motion**: ship, promote to the channel
-  the app's instances follow, then watch the URL until the header reports
-  the shipped build. "Held for bake" on a production app is the system
-  working, not failing.
+- **`carlos deploy` is the release motion**: ship, promote to the entry
+  channel (or the channel the app's instances follow), then watch the URL
+  until the header reports the shipped build. "Held for bake" on a
+  channel that declares one is the system working, not failing.
 - **A promote is not a deploy** until the process cycles. The platform
   restarts unit-stamped routes and wakes hibernating tenants into the new
   build (a session in flight keeps the old binary until its instance
