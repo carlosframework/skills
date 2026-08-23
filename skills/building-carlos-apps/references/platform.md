@@ -93,6 +93,7 @@ apt, static binaries) and Windows (client-only zip — no self-replace,
 | `carlos promote` | Move a version up the ladder (`-hotfix` to bypass, recorded) |
 | `carlos deploy` | ship + promote + watch `X-Carlos-Version` until live — the one-command release; zero-arg with a saved project config |
 | `carlos rollback` | Point a channel back at an earlier version |
+| `carlos pipeline` | Show or shape the app's release channels; `init -template edge-production\|full-ladder` replaces the single default channel with a starter pipeline |
 | `carlos channels` / `carlos releases` | What each channel serves / every shipped version; `releases retention` prunes old ones |
 | `carlos version target` | The semver family ships auto-increment under |
 | `carlos env` / `carlos secrets` | Plain vars / sealed secrets, layered per environment; `env sync` forces convergence; `secrets genkey` mints keypairs locally |
