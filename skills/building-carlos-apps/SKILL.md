@@ -46,7 +46,7 @@ Read this skill alongside three facts:
 - **Carloku** (carloku.com) is the hosted deployment of that platform —
   the default hosting answer, with a free tier. Carloku is the product
   brand; the CLI is always `carlos`.
-- **Rastrillo** is the CARLOS web framework (v0.7.x; repo at
+- **Rastrillo** is the CARLOS web framework (v0.17.0; repo at
   `github.com/rastrilloorg/rastrillo`, module path still
   `github.com/carlosframework/rastrillo`): a middle layer of known
   libraries — GORM models, chi routes, SQLite-backed sessions, identity

@@ -40,7 +40,7 @@ The pieces, named once:
 | Amounts | integer cents (`form.ParseCents`) | A float never touches an amount |
 | Hosting | Carloku, `<app>.<sqid>.oncarlos.com` | Zero infra to run; certs, replication, hibernation all platform-side |
 | Versioning | git short sha (`v1` is fine for the very first ship) | House convention |
-| Channel | `stable` (the instance default) | Fresh apps promote straight there; ceremony arrives only with the production flag |
+| Channel | `edge` | A new app is born with a single channel of that name — **edge IS production** (Paul, 2026-08-19; release pipelines v2 builds it in). Bake windows, passkeys, and approvals are per-channel opt-ins you add later via a pipeline |
 | Trust model | Honest server: app data is server-readable, and the README says so | See "The one decision you must still record" below |
 
 ## The one decision you must still record
@@ -156,8 +156,10 @@ Provision the instance (once), build for the boxes, deploy:
 
 ```sh
 carlos instances enable -app myapp          # opt-in; console pins your <sqid> domain
-carlos instances create -app myapp -host myapp.<sqid>.oncarlos.com
-# substitute your real sqid (carlos auth whoami shows it) — the host is typed in full
+carlos instances create -app myapp -host myapp.<sqid>.oncarlos.com -channel edge
+# substitute your real sqid (carlos auth whoami shows it) — the host is typed in full;
+# -channel edge is deliberate: the instance-create default is still stable, but a
+# new app's one channel — the one carlos deploy lands on — is edge
 
 GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build \
   -ldflags "-X github.com/carlosframework/rastrillo.BuildVersion=$(git rev-parse --short HEAD)" \
@@ -170,8 +172,9 @@ The platform's boxes are **linux/arm64** — build exactly that, statically
 (`CGO_ENABLED=0`; cgo is why the framework uses `modernc.org/sqlite`).
 
 `carlos deploy` is ship + promote + watch in one motion: it uploads an
-immutable release, promotes it to the channel your instance follows
-(`stable` by default), then polls until the URL's `X-Carlos-Version`
+immutable release, promotes it to your app's entry channel (`edge` —
+for a fresh app, edge is production; the old three-rung ladder is now
+an opt-in pipeline), then polls until the URL's `X-Carlos-Version`
 header reports the shipped build, and prints `live https://…`. On first
 run it offers to remember the artifact path in `.carlos/config`
 (commit that file); after that, releasing is just `carlos deploy`, no
@@ -183,7 +186,7 @@ No instance, no binary — ship the directory and promote:
 
 ```sh
 carlos ship -kind static -version v1 ./public
-carlos promote v1 stable
+carlos promote v1 edge
 # or in one motion: carlos deploy -kind static ./public
 ```
 
@@ -216,7 +219,7 @@ Two traps, both paid for:
 | Secret | `carlos secrets set -app myapp KEY=value` (sealed, never printed) |
 | Tail logs | `carlos logs -app myapp -f` |
 | Bounce the process | `carlos restart -app myapp` |
-| Undo a release | `carlos rollback -app myapp stable` |
+| Undo a release | `carlos rollback -app myapp edge` |
 | List releases | `carlos releases -app myapp` |
 | Custom domain | `carlos domains attach -app myapp www.example.com` — it tells you the DNS records to create; certs are automatic once DNS points at the platform |
 
