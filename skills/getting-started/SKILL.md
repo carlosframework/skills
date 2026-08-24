@@ -265,7 +265,8 @@ The full working conventions are building-carlos-apps'
 
 The moment the app needs a choice — end-to-end or partial encryption, a
 feed/real-time client shape, self-hosting, fleets of your own boxes — or a
-capability this recipe skips, such as sending email (`carlos email enable`,
-platform.md) — switch to **carlos:building-carlos-apps**. It holds the decision axes,
+capability this recipe skips, such as sending email (`carlos email enable`)
+or work that has to happen on a clock (`carlos schedule set` — an idle
+instance cannot run its own timer), both in platform.md — switch to **carlos:building-carlos-apps**. It holds the decision axes,
 the family evidence for each option, and the deeper references this
 recipe deliberately skips.
