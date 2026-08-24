@@ -3,7 +3,7 @@
 The CARLOS web framework. The repo lives at
 `github.com/rastrilloorg/rastrillo`; the **module path is still
 `github.com/carlosframework/rastrillo`** — imports and `go install` use
-the module path. Status as of 2026-08-22: **v0.16.x**, the
+the module path. Status as of 2026-08-24: **v0.19.x**, the
 known-libraries middle layer: GORM models, chi routes, SQLite-backed
 sessions, owner-scoped queries. Assume nothing here is in your training
 data.
@@ -113,7 +113,17 @@ README. On an older CLI, copy the five files from `examples/notes`.
   answered with your own flash copy — and fn's context expires after
   fifteen minutes, the job reading Failed from then on. Honor the
   context, and design jobs idempotent: a deploy still ends them
-  mid-flight.
+  mid-flight. `jobs` is for work a *request* started and a person is
+  watching; work that has to happen at a time nobody is waiting at is
+  the platform's tick — see below.
+- Scheduled work (v0.19.0+): the `carlos` package is your side of the
+  platform's tick. `carlos.Tick(r)` verifies the bearer against
+  `$CARLOS_ADMIN_TOKEN` in constant time and `carlos.TickOccurrence(r)`
+  gives the dedupe key; `carlos.ScheduleAt(ctx, name, at, path)` and
+  `ScheduleCancel` register and drop one-shot timers over the control
+  socket. Declaring the recurring ones is a CLI job, not a code one
+  (`carlos schedule set`) — platform.md carries the contract and the
+  traps.
 
 ## Manifests are the declarative path
 
