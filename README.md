@@ -38,6 +38,22 @@ Or plainly: copy a skill's directory into your app repo's
 `.claude/skills/` (or `~/.claude/skills/` for all projects). Each is a
 handful of Markdown files; nothing else is required.
 
+Or with no install at all: the platform-facing skills are published for
+agent discovery at
+[carlosframework.com/.well-known/agent-skills/index.json](https://carlosframework.com/.well-known/agent-skills/index.json),
+per the [Agent Skills Discovery
+draft](https://github.com/cloudflare/agent-skills-discovery-rfc) — an
+index of name, description, url and sha256 digest per skill, with each
+`SKILL.md` (and its `references/`) served beside it. `delegate` is
+plugin-only on purpose: it is operator tooling, not knowledge about
+CARLOS.
+
+The website repo vendors those files from here (`hack/sync-skills.mjs`
+in `carlosframework/website`, byte-for-byte — the digests pin the served
+bytes to this repo's). **When a published skill changes here, re-sync
+and ship the website in the same batch**, or the served copy drifts
+behind the plugin.
+
 ## Provenance
 
 Distilled July 2026 from the prompt histories, CLAUDE.md files and code of
