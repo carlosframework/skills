@@ -65,7 +65,7 @@ bug is worth more than a slightly better first draft.
 Every dispatch names, explicitly:
 
 1. **Where** — absolute worktree/repo path, branch, current HEAD.
-2. **What to read first** — the project CLAUDE.md, the spec/plan section
+2. **What to read first** — the project AGENTS.md, the spec/plan section
    (say "the task text is authoritative"), and the specific existing code
    to match style against.
 3. **Exactly what to build** — pinned interfaces byte-for-byte where they

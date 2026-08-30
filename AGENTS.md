@@ -1,4 +1,4 @@
-# 🤖 CLAUDE.md
+# 🤖 AGENTS.md
 
 Working notes for anyone (human or agent) changing this repo.
 
