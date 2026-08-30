@@ -56,8 +56,8 @@ behind the plugin.
 
 ## Provenance
 
-Distilled July 2026 from the prompt histories, CLAUDE.md files and code of
-the five source applications plus the deliberate adopters; refreshed
+Distilled July 2026 from the prompt histories, repo instruction files and
+code of the five source applications plus the deliberate adopters; refreshed
 August 2026 for the platform era — the `carlos` CLI, Carloku hosting,
 rastrillo v0.5.0, and the decisions recorded by Keymail, Kass, Woodstar,
 Tito, and Seapointish along the way. Contains no secrets, hostnames of
