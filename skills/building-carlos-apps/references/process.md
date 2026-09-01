@@ -38,6 +38,14 @@ hard way at least once; the incident is noted where it names the rule.
   Two of the three is not a merge — a green run on unapproved work waits,
   and an approval over a red run waits. Never commit to main. Deploy only
   merged main, and only when asked.
+- **"CI green" binds once CI exists, and a new repo's early work is to
+  make it exist.** A repo with no CI has no green to wait for: the
+  condition is not waived, it simply has nothing to read yet, so the first
+  merges of a new project land on done + approved. Standing up CI is one
+  of the first work items, not a prerequisite nobody can satisfy — and it
+  is the gate you already run locally, kept as one definition rather than
+  a second list that drifts, so debugging CI is running it. Once the repo
+  has CI all three bind absolutely and the carve-out is spent.
 - Commit subjects are area-prefixed prose that says why (`web: the front
   door is a homepage — pitch left, sign-in right`; `auth: delete the
   recovery passphrase, root and branch`). Comment the why, not the what.
