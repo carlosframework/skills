@@ -171,7 +171,7 @@ The ones the family invokes operationally:
 | Identity | "Sign in with Keymail" / passkeys+PRF / magic link+TOTP by trust model — decisions.md §4 |
 | Trust | Server-blind by default; the spectrum and its named softenings — decisions.md §1 |
 | UI stance | Hide the machinery: no hostnames, keys, or crypto vocabulary in the default flow — "no nerdspeak"; calm UI, red for danger only, no toasts |
-| Process | Worktree per session, branch, regular pushed commits; squash-merge to main only when done, approved and CI green; review on a deployed canary, never localhost |
+| Process | Worktree per session, branch, regular pushed commits; squash-merge to main only when done, approved and CI green (CI green binds once the repo has CI — a new repo's first merges land on done + approved and add CI early); review on a deployed canary, never localhost |
 | Authorship | 🤖/👨 markers, `Co-Authored-By: Claude …` trailers, published prompt + carbon ledgers |
 
 ## Details
@@ -227,5 +227,6 @@ The ones the family invokes operationally:
 | Treating a promote as a deploy | Until the process cycles, the old binary serves. Platform-known units cycle automatically; hibernating tenants wake into the new build; a bespoke unit stays old until something restarts it. |
 | Reviewing on localhost | Review happens on a deployed canary, always. Shared hosts only ever run merged main. |
 | Skipping the post-deploy browser check | A JS syntax error takes the whole client down and only a real engine sees it (the keymail rule). |
+| Treating a day-one absolute as unsatisfiable and quietly skipping it | A gate a brand-new project cannot meet is a gate not written for day one. Name the bootstrap case in the rule and make satisfying it early work — a rule agents learn to step around stops working everywhere. |
 | Relitigating a settled decision in a drive-by | Settled decisions change with new facts, dated and attributed — not casually. |
 | A retired stack left owning DNS or deploy paths | It can silently undo a cutover (a legacy apply once reverted a live A record). Move the records; delete the verb that can report success while changing nothing. |

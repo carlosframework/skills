@@ -247,7 +247,10 @@ The platform mechanized the infrastructure, not the discipline:
   build step, 300-line cap.
 - Worktree per session, on a branch, with regular commits pushed as you
   go. Squash-merge to main only once the work is done, a human has
-  approved it, and CI is green; deploy only what merged. Commit trailers
+  approved it, and CI is green — until the repo has CI there is no green
+  to wait for, so done + approved is the gate, and standing up CI (the
+  same gate as above, run for you) is early work rather than a
+  prerequisite nobody can meet. Deploy only what merged. Commit trailers
   mark AI authorship (🤖 / `Co-Authored-By`).
 
 The full working conventions are building-carlos-apps'
