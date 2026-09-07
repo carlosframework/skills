@@ -1,6 +1,6 @@
 ---
 name: building-carlos-apps
-description: Use when building or designing an app on the CARLOS architecture (Cost-efficient, Available, Replicated, Lightweight, Open, Secure) or with rastrillo (the CARLOS web framework), bringing an existing app onto it, or weighing the family's open choices — full vs partial encryption, server-rendered vs client-owned shape, hosted vs self-hosted — the model extracted from Eleven Messenger, Keymail, Woodstar, Slopbox and Kass, adopted by Tito and Seapointish. For the zero-decisions happy path to a first live app, use getting-started instead.
+description: Use when building or designing an app on the CARLOS architecture (Cost-efficient, Available, Replicated, Lightweight, Open, Secure) or with rastrillo (the CARLOS web framework), bringing an existing app onto it, or weighing the family's open choices — full vs partial encryption, server-rendered vs client-owned shape, hosted vs self-hosted — the model extracted from Eleven Messenger, Keymail, Woodstar, Slopbox and Kass, adopted by Tito. For the zero-decisions happy path to a first live app, use getting-started instead.
 ---
 
 # 🤖 Building CARLOS apps
