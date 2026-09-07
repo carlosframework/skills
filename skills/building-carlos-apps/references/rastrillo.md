@@ -116,6 +116,17 @@ README. On an older CLI, copy the five files from `examples/notes`.
   mid-flight. `jobs` is for work a *request* started and a person is
   watching; work that has to happen at a time nobody is waiting at is
   the platform's tick — see below.
+
+- Screens: use the `ui` vocabulary rather than writing controls by
+  hand. A labelled field is `field-text` / `field-textarea` /
+  `field-select` inside `<form rst-form>`, closed by `form-foot`;
+  `rst-btn` takes a size (`sm`, default, `lg`) alongside its variant,
+  and a form's submit is `rst-btn="primary lg"`. This is the rule most
+  often missed, because missing it is silent: a hand-written
+  `<label>Email <input></label>` and a bare `<button>` validate and
+  submit perfectly, and simply render as a ragged column of inline
+  labels above a skinny full-width button. Nothing errors, no test
+  fails, and the app just looks wrong. SKILL.md §7, docs/site/forms.md.
 - Scheduled work (v0.19.0+): the `carlos` package is your side of the
   platform's tick. `carlos.Tick(r)` verifies the bearer against
   `$CARLOS_ADMIN_TOKEN` in constant time and `carlos.TickOccurrence(r)`
@@ -148,7 +159,11 @@ handlers.
 
 1. `examples/notes` — the front-door example: accounts, sessions,
    CSRF, flash, owner-scoped resources, a background export job, and a
-   two-user isolation test suite. This is the shape to imitate.
+   two-user isolation test suite. This is the shape to imitate — its
+   screens included, but only from the version that uses the `ui`
+   vocabulary. Before that its hand-written pages were bare
+   `<label><input>` pairs with no stylesheet loaded at all, and being
+   named here as the shape to imitate is how that spread.
 2. `examples/tickets` — the declarative (manifest) path, per resource.
 
 Deploying: stamp

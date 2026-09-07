@@ -31,7 +31,7 @@ a first app live, decide everything for me", use the sibling skill
 **carlos:getting-started** — it is this skill with all four decision axes
 pre-answered with the defaults.
 
-## Where this sits now (2026-08-17)
+## Where this sits now (2026-09-07)
 
 The family's conventions have progressively become running infrastructure.
 Read this skill alongside three facts:
@@ -40,7 +40,12 @@ Read this skill alongside three facts:
   enough that a member ships, promotes, configures, watches logs, attaches
   domains, and rolls back entirely through the `carlos` CLI with zero
   infrastructure access. Routing, TLS, replication, hibernation, restarts,
-  and config delivery are the platform's job now.
+  and config delivery are the platform's job now — and since late August
+  so are **canaries** (`carlos canary`), **timetables**
+  (`carlos schedule`), **errors and analytics** counted at the edge with
+  no SDK, a **password gate** in front of a hostname, **feature flags**,
+  and **latency DNS steering**. Reach for a platform verb before building
+  any of them into an app.
   **[references/platform.md](references/platform.md)** is the member-side
   reference — concepts, the full verb table, and the deploy truths.
 - **Carloku** (carloku.com) is the hosted deployment of that platform —
@@ -164,6 +169,13 @@ The ones the family invokes operationally:
 | Frontend | Two shapes, chosen deliberately: `server` (server-rendered, zero-JS baseline — the default) or `client` (Woodstar's shape) — see decisions.md §2 |
 | JS discipline | 300-line module cap enforced by test, ratchet-down only; VanJS (vendored) the one sanctioned reactive dependency |
 | Routing, TLS, replication, hibernation, restarts | The platform's job — see platform.md; hand-rolled only off-platform (blueprint.md) |
+| Periodic work | `carlos schedule` — a time and a path; each fire is a POST to a route the app already serves, over its own socket. Never cron, never a second worker. A schedule tighter than the idle window stops the instance hibernating, and that is billed — platform.md |
+| Object storage | `carlos store create` declares a bucket, an operator grants it, credentials arrive as env; `carlos store scan` is opt-in virus scanning, off by default. It reconciles — it counts the objects it has NOT looked at — so ask for both numbers. Server-blindness wins over it: a client-encrypted store gets no coverage claim, because nothing can read the bytes — platform.md |
+| Errors and analytics | `carlos errors` needs no wiring and collects from day one (tagged log lines + edge-seen 5xx); `carlos analytics` counts at the edge with no JavaScript, no cookie, no stored IP, and is opt-in per app or account. Do not add a third-party analytics script to a CARLOS app — platform.md |
+| Canaries | `carlos canary` — a branch-only channel and hostname, outside every pipeline, seven-day lease. Review there, never on localhost. Pass `--environment` if the app carries config, or every form submission on the canary host fails — platform.md |
+| Config environments | `carlos env --environment` writes a named bundle; a route is bound to one via the instance record (`instances set-environment`), then `carlos restart --environment` cycles exactly what reads it — platform.md |
+| Feature flags | `carlos features set` — the platform serves them, only the app interprets them, and they land on the instance's next poll with no restart — platform.md |
+| Hostname-level password | `carlos gate` — one shared password at the edge in front of an app's hostnames, for a prototype or a private static site. A curtain over a hostname, never a substitute for the app's own accounts — platform.md |
 | Outbound email | `carlos email enable` — the platform mints the sending identity, publishes DKIM/SPF/DMARC, delivers SMTP credentials as env; never run an MTA or hold a cloud mail key — platform.md |
 | Scheduled work | `carlos schedule set` declares it; the app's part is a POST handler guarded by `carlos.Tick` — the instance is asleep, so never an in-process cron — platform.md |
 | Hosting | Carloku hosted (default) / customer fleets / self-hosted platform — decisions.md §3 |
@@ -181,10 +193,12 @@ The ones the family invokes operationally:
   positions, recorded reasons, and a decision guide.
 - **[references/platform.md](references/platform.md)** — the platform
   member-side: concepts (accounts, releases, channels, instances,
-  hibernation), the `carlos` CLI verb table, sending email (SMTP
-  credentials, DKIM/DMARC alignment, the credential-propagation trap),
-  scheduled work (the tick contract, idempotency, one-shot timers),
-  deploy truths, self-hosting.
+  hibernation, config bundles, canaries), the `carlos` CLI verb table,
+  deploying a static site, standing a canary beside production, scheduled
+  work (the tick contract, idempotency, one-shot timers, what a tight
+  schedule costs), errors and analytics, sending email (SMTP credentials,
+  DKIM/DMARC alignment, the credential-propagation trap), deploy truths,
+  self-hosting.
 - **[references/rastrillo.md](references/rastrillo.md)** — building an
   app with rastrillo: the middle-layer shape, where the authoritative
   SKILL.md lives, the safety rules, and the declarative manifest path.
