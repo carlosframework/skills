@@ -93,8 +93,7 @@ The layers, in order:
    small `jstest_test.go`, so one command runs everything. `node --check`
    alone is not enough — it parses as CommonJS and swallows ES-module errors
    that crash Safari; check a `.mjs` copy and load it in a real engine.
-4. **uidump — dump, don't drive** (the seapointish pattern, adopted by
-   the platform console). An env-gated test (`UIDUMP_DIR` set, else
+4. **uidump — dump, don't drive** (adopted by the platform console). An env-gated test (`UIDUMP_DIR` set, else
    skipped) boots the real handler in-process over `httptest`, seeds a
    fixture world rich enough that every state has a subject, signs in,
    GETs every named screen, and writes each response body to disk with
