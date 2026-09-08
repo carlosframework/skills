@@ -167,6 +167,27 @@ otherwise `--console` does.
   Minted **alias** hosts intentionally carry no `X-Carlos-Version` —
   verify on the canonical host.
 
+## Describe changes in Activity
+
+Agents pass `--message` explicitly for `ship`, `deploy`, `promote`,
+`rollback`, `restart`, `instances create`, `instances delete`, `features set`,
+`env set`, `env unset`, and `env exec-delivery`.
+Use a concise sentence describing the intended change or why it is needed:
+`carlos deploy --message "Fix invitation links after an email address changes"`.
+The console records the exact action, version, channel, or instance separately;
+repeating only a commit hash or "deploy app" adds no useful context. Do not
+invent an outcome you have not verified, or include secrets or config values.
+
+Messages are optional, one line, at most 240 Unicode characters. They are
+separate from release labels and release notes. Interactive CLI commands ask
+for a description by default; an empty answer skips it. Noninteractive commands
+do not prompt. `--no-prompt` suppresses the question for a command, and
+`"message_prompt": "off"` in `.carlos/config` disables prompts by default.
+Agents should still supply `--message` when
+prompts are disabled. Explicit `--message` still applies with `--no-prompt` or
+config suppression. `deploy` asks once and uses the same description for its
+ship and promote steps.
+
 ## The member CLI
 
 | Verb | What it does |
