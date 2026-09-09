@@ -167,8 +167,13 @@ GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build \
   -ldflags "-X github.com/carlosframework/rastrillo.BuildVersion=$(git rev-parse --short HEAD)" \
   -o myapp-linux-arm64 ./cmd/myapp
 
-carlos deploy --app myapp ./myapp-linux-arm64
+carlos deploy --app myapp --message "Publish the first working app" ./myapp-linux-arm64
 ```
+
+Agents pass `--message` on deploys and other mutations that support it. Describe
+what is being changed in one concise sentence; the Activity entry records the
+version and target separately. Do not wait for the interactive prompt during an
+automated run. See [Activity descriptions](../building-carlos-apps/references/platform.md#describe-changes-in-activity).
 
 The platform's boxes are **linux/arm64** — build exactly that, statically
 (`CGO_ENABLED=0`; cgo is why the framework uses `modernc.org/sqlite`).
@@ -227,11 +232,11 @@ Two traps, both paid for:
 
 | Want | Command |
 |---|---|
-| Release again | `carlos deploy` (zero-arg, from the project dir) |
-| Config var | `carlos env set --app myapp KEY=value` (converges in seconds) |
+| Release again | `carlos deploy --message "Fix invoice rounding"` (from the project dir) |
+| Config var | `carlos env set --app myapp --message "Update the app setting" KEY=value` (converges in seconds) |
 | Secret | `carlos secrets set --app myapp KEY=value` (sealed, never printed) |
 | Tail logs | `carlos logs --app myapp -f` |
-| Bounce the process | `carlos restart --app myapp` |
+| Bounce the process | `carlos restart --app myapp --message "Restart after changing configuration"` |
 | Undo a release | `carlos rollback --app myapp edge` |
 | List releases | `carlos releases --app myapp` |
 | Custom domain | `carlos domains attach --app myapp www.example.com` — it tells you the DNS records to create; certs are automatic once DNS points at the platform |

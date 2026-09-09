@@ -180,6 +180,7 @@ The ones the family invokes operationally:
 | Scheduled work | `carlos schedule set` declares it; the app's part is a POST handler guarded by `carlos.Tick` — the instance is asleep, so never an in-process cron — platform.md |
 | Hosting | Carloku hosted (default) / customer fleets / self-hosted platform — decisions.md §3 |
 | Deploys | `carlos deploy`: ship + promote + watch `X-Carlos-Version` until live; verify against the thing you changed with the binary you built. A static site is the same one command — `--kind static --host <h> <dir>`, which declares the route too — platform.md |
+| Activity descriptions | Pass a concise `--message` on supported mutations: say what changes and why. The console records the exact target separately. Agents supply the message even when prompts are disabled — platform.md |
 | Identity | "Sign in with Keymail" / passkeys+PRF / magic link+TOTP by trust model — decisions.md §4 |
 | Trust | Server-blind by default; the spectrum and its named softenings — decisions.md §1 |
 | UI stance | Hide the machinery: no hostnames, keys, or crypto vocabulary in the default flow — "no nerdspeak"; calm UI, red for danger only, no toasts |
