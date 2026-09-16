@@ -69,6 +69,20 @@ skill mainly for what infrastructure can't enforce — the decisions, the
 dated rulings, the workflow, and "Common mistakes". Hand-rolling outside
 the platform for a specific reason: blueprint.md in full still applies.
 
+## UI default: Rastrillo with a thin CSS layer
+
+For new app screens, start with Rastrillo's design system: its `ui`
+partials, component classes, design tokens and themes. Read
+[the styling guidance](references/rastrillo.md#design-system-and-app-css)
+before writing templates or CSS. Keep app CSS small: app-specific layout,
+branding through token overrides, and components the library does not yet
+provide. Reuse the shared controls instead of rebuilding them or overriding
+them screen by screen.
+
+This is the default, not a request to redesign an existing app. Respect an
+explicit design brief or an established design system; record the reason
+when choosing a different foundation.
+
 ## The one rule comes first
 
 Every app opens its AGENTS.md with a single load-bearing rule and derives
