@@ -36,6 +36,7 @@ The pieces, named once:
 |---|---|---|
 | Language / framework | Go + rastrillo, one static binary | The family stack; the framework enforces the SQLite and money rules for you |
 | App shape | Server-rendered HTML, zero-JS baseline | The family default; the other shape is a decision (building-carlos-apps) |
+| Design system | Rastrillo UI and tokens, with a thin app CSS layer | Reuse shared controls and themes; custom CSS covers app layout and branding |
 | Storage | SQLite via GORM (`rastrillo/db`) | cgo-free driver, WAL pragma order, writer/reader pools — `db.Open` owns all of it; migrations via `AutoMigrate`, additive-only |
 | Amounts | integer cents (`form.ParseCents`) | A float never touches an amount |
 | Hosting | Carloku, `<app>.<sqid>.oncarlos.com` | Zero infra to run; certs, replication, hibernation all platform-side |
@@ -151,6 +152,13 @@ your binary accepts `--socket <path> --db <path>` and serves
 `GET /healthz` and `GET /api/version`. **There is no `$PORT`**;
 instances listen on unix sockets the platform hands them. Do not
 hand-roll flag parsing.
+
+For the screens, use Rastrillo's `ui` partials and component classes. Load
+its vendored `tokens.css` before a small app stylesheet; use that layer for
+app layout, token overrides and components Rastrillo does not provide.
+Read [the design-system guidance](../building-carlos-apps/references/rastrillo.md#design-system-and-app-css)
+before writing templates or CSS, and follow the docs for the app's installed
+Rastrillo version. Keep shared controls and their interaction states intact.
 
 ## Step 3 — first deploy
 

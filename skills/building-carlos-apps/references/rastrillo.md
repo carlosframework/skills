@@ -117,16 +117,6 @@ README. On an older CLI, copy the five files from `examples/notes`.
   watching; work that has to happen at a time nobody is waiting at is
   the platform's tick — see below.
 
-- Screens: use the `ui` vocabulary rather than writing controls by
-  hand. A labelled field is `field-text` / `field-textarea` /
-  `field-select` inside `<form rst-form>`, closed by `form-foot`;
-  `rst-btn` takes a size (`sm`, default, `lg`) alongside its variant,
-  and a form's submit is `rst-btn="primary lg"`. This is the rule most
-  often missed, because missing it is silent: a hand-written
-  `<label>Email <input></label>` and a bare `<button>` validate and
-  submit perfectly, and simply render as a ragged column of inline
-  labels above a skinny full-width button. Nothing errors, no test
-  fails, and the app just looks wrong. SKILL.md §7, docs/site/forms.md.
 - Scheduled work (v0.19.0+): the `carlos` package is your side of the
   platform's tick. `carlos.Tick(r)` verifies the bearer against
   `$CARLOS_ADMIN_TOKEN` in constant time and `carlos.TickOccurrence(r)`
@@ -135,6 +125,42 @@ README. On an older CLI, copy the five files from `examples/notes`.
   socket. Declaring the recurring ones is a CLI job, not a code one
   (`carlos schedule set`) — platform.md carries the contract and the
   traps.
+
+## Design system and app CSS
+
+Use Rastrillo's design system as the default foundation for app screens.
+Before styling, read `docs/site/templates.md`, `docs/site/forms.md` and
+`docs/site/reference/ui.md` in the Rastrillo version the app uses. These
+cover the partials, component classes and supported variants; each partial
+also documents its data contract in its template file. Use the installed
+version's vocabulary rather than guessing classes or copying older markup.
+
+- Load the shared `tokens.css` before the app stylesheet. `rastrillo new`
+  copies it from `ui.TokensCSS()` into the app's `static/` directory; it
+  contains component styles as well as tokens. Keep that base intact by
+  default, with branding and layout in a separate app stylesheet.
+- Compose screens from `ui` partials and their documented containers. For
+  forms, use `field-text`, `field-textarea` or `field-select` inside
+  `<form class="rst-form">`, followed by `form-foot`. Buttons use the
+  documented `rst-btn` classes and size/variant modifiers for that version.
+- Keep the CSS above Rastrillo thin: app-specific layouts, scoped styles
+  for missing components, and a small set of deliberate token overrides.
+  Reuse `--rst-*` tokens for shared visual values. Avoid a second palette,
+  spacing scale, or button/input system, broad element resets, and repeated
+  overrides of shared components. Check for an existing variant first.
+- Preserve the shared focus, disabled, error and responsive behavior. Check
+  light and dark themes and keyboard navigation when adding overrides;
+  app branding must not erase those states or reduce contrast.
+- The CSS copy is vendored, not refreshed by a Go module upgrade. Review
+  and refresh it alongside Rastrillo upgrades, keeping app overrides
+  separate. The scaffold's `vendored_test.go` detects drift; an intentional
+  fork needs a reason and a matching test update, not a failing test left
+  behind.
+
+A repeated workaround for a shared component is a candidate for an
+upstream Rastrillo change. An explicit design brief or an existing app's
+design system can justify another foundation; name that choice rather than
+silently replacing the default.
 
 ## Manifests are the declarative path
 
