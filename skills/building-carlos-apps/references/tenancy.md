@@ -41,15 +41,20 @@ dispatcher).
 2. **What should fail together?** A panic or a runaway query takes down
    one instance. Choose the unit whose outage you can explain to one
    customer.
-3. **Who leaves together?** Erasing a unit is deleting a file; taking a
-   unit home is copying one. Pick the unit a customer would ask to
+3. **Who leaves together?** A unit's data is its own database and its
+   own objects, so exporting it is copying them and erasing it is a
+   bounded list (the platform keeps a deleted instance's data until you
+   remove it). Pick the unit a customer would ask to
    export, delete or move to their own boxes.
 4. **What crosses units?** Sharing is **membership**, never copying: a
    person joins someone else's instance (a coach in a client's log, a
    member in a team). If a feature needs to *query* across units
    (reporting, search across all customers), the unit is too small or
    that feature belongs in its own app. A central app answers "what
-   might I have access to", never "may I have this".
+   might I have access to", never "may I have this". There is no family
+   pattern yet for cross-tenant reporting (a vendor's dashboard across
+   every customer): if an app needs one, whatever leaves each instance is
+   declared residue, and the design is recorded and ruled, not improvised.
 5. **Does it idle?** Instances that sit idle hibernate and cost nothing.
    Small units that are used in bursts get the most from this.
 
@@ -95,6 +100,18 @@ your own and record why.
   hub's session-signing key is the product's crown jewel. **Today a path
   target must live on the same box as the hostname**, so a path-routed
   product is one box big.
+  How it fits together: the tenant receives `/acme/...` unchanged, so the
+  tenant app serves everything (routes, assets, redirects, form actions)
+  under its base path, and its own direct hostname redirects to the
+  product path. Because hub and tenants share one origin, there is one
+  session: the hub mints a short-lived signed cookie (15 minutes, with a
+  per-user epoch so "sign out everywhere" works), and tenants hold the
+  hub's public key (`carlos env set`) and verify it on every request,
+  never minting their own. Ordinary per-tenant rastrillo sessions do not
+  work under model C: every tenant would set the same cookie name on the
+  same origin and sign the others out. The hub delivers roster changes to the
+  instance first, with a signed request, then records its directory
+  copy.
 - **D** is B's shape for server-blind apps: the home holds credential
   public keys and one sealed blob per person and can read neither.
 
@@ -111,7 +128,9 @@ to copy. Anything relational (reporting, search) belongs in an instance.
 1. The provisioning credential (`carlos services create --role instance
    --app <tenant-app>`) lives on the central app, never on the tenant app.
    It is app-wide today: it can also delete any sibling instance. Publish
-   that as a leak until the platform ships a create-only role.
+   that as a leak until the platform ships a create-only role. The same
+   goes for any `instance`-role token (`CARLOS_INSTANCE_TOKEN`): never put
+   one in the tenant app's secrets, whatever the convenience.
 2. An instance decides access from its own roster. A signature proves
    who, never what.
 3. Handoff tokens never ride in URLs, and the receiver enforces single
@@ -188,7 +207,7 @@ the ones your tenancy actually earns.
 | **Cost/performance efficiency** | idle instances hibernate to the bucket and cost nothing; the fleet is sized to concurrent use, not headcount | units that idle (smaller units idle more) | live |
 | **Wake in under 500 ms** | a request for a sleeping instance is held while it wakes | same | live |
 | **Replicated from the first byte** | every database streams to object storage; every wake is a restore | an instance with a database (central apps keep records in the store instead) | live |
-| **Erasure and export per tenant** | erasing a tenant is deleting a file; taking it home is copying one | the unit matching who leaves together | live |
+| **Export and erasure per tenant** | a tenant's data is its own database and its own objects, never rows mixed with others, so export is copying them and erasure is a bounded list | the unit matching who leaves together | export live (`carlos db pull`); erasure is a procedure you write: `instances delete` deliberately keeps the parked database, replica and store objects, so name each and how it goes |
 | **Residency per app or per instance** | an instance only wakes on a host in its region | per-unit instances, so each customer can be pinned | released, switched off on Carloku |
 | **Self-hostable, first class** | one binary, a bucket and DNS; same binary hosted, on a customer's boxes (`carlos fleets`), or on a self-run platform | nothing; licence class decides what customers may do | live |
 | **One codebase, every deployment** (vendors) | one instance per customer means on-prem is a fleet you administer, not a fork | per-customer instances | customer fleets live; Tito self-hosts in three regions |

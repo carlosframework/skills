@@ -205,8 +205,8 @@ The platform's boxes are **linux/arm64** — build exactly that, statically
 `carlos deploy` is ship + promote + watch in one motion: it uploads an
 immutable release, promotes it to your app's entry channel (`edge` —
 for a fresh app, edge is production; the old three-rung ladder is now
-an opt-in pipeline), then follows the rollout box by box until the new
-build serves, and prints `live https://…`. Set `carlos apps build-probe
+an opt-in pipeline), then follows the rollout box by box (on Carloku;
+elsewhere it watches the URL) until the new build serves, and prints `live https://…`. Set `carlos apps build-probe
 --app myapp /api/version` once so it asks the process which build it
 runs rather than trusting the `X-Carlos-Version` header. On first
 run it offers to remember the artifact path in `.carlos/config`

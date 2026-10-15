@@ -61,8 +61,8 @@ in this skill, and every benefit on carlosframework.com, hangs off them.
    chosen and written down).
 
 Then name the benefits the design earns, each with its mechanism (isolated
-data per tenant, blast radius of one, hibernation, per-tenant erasure and
-residency, a falsifiable security claim, self-hosting from the same
+data per tenant, blast radius of one, hibernation, per-tenant export and
+erasure, residency once switched on, a falsifiable security claim, self-hosting from the same
 binary), and the costs it accepts. **[references/tenancy.md](references/tenancy.md)**
 has the gallery's real choices, the four user models, the classes, the
 benefits table with what is live today, worked examples, and the

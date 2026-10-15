@@ -736,8 +736,10 @@ specific time; a daily schedule whose handler asks its own database
 
 ## Two builds at once
 
-Since v0.26.0, and on Carloku since 2026-10-14, a new build reaching an
-awake instance starts beside the old one and takes over once it passes
+Since v0.26.0, where the deployment has switched it on (Carloku did on
+2026-10-14; the v0.27.3 default is off, and then a build is taken by
+restart and `deploy` watches the URL instead of each box's rollout), a
+new build reaching an awake instance starts beside the old one and takes over once it passes
 its health check, so no request waits (`--swap overlap`, the default).
 For a few seconds both builds run against the same database and the same
 scheduled work, and the new build's migrations run while the old one
@@ -781,8 +783,12 @@ must credit the database `X-Carlos-Geo-Source` names** — `DBIP-…`:
 "This product includes GeoLite2 data created by MaxMind, available from
 https://www.maxmind.com". For an address that is not the current
 request (a log line, a webhook), `carlos geo <address> --app <a>`, or
-from the app `GET /api/cli/apps/<account>/<app>/geo?ip=<address>` with
-its instance token, at most 60 a minute.
+from an app `GET /api/cli/apps/<account>/<app>/geo?ip=<address>`, at
+most 60 a minute. That call needs an `instance`-role token, which is
+app-wide (it can also create, repoint and delete every sibling
+instance), so make it only from a central app that already holds one;
+never deliver that token to a tenant app's instances just to look up an
+address. Tenant instances use the request headers.
 
 ## Deploy truths (each paid for at least once)
 
