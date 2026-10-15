@@ -12,7 +12,11 @@ Two paths, one family:
   server-rendered HTML, `carlos deploy`. For a first app with minimum
   further guidance.
 - **[building-carlos-apps](skills/building-carlos-apps/SKILL.md)** — the
-  menu: the family's principles, the platform member surface, the rastrillo
+  menu. It starts with tenancy: what one instance of the app is (a person,
+  a team, a customer, a repository, the whole app), how people reach it
+  (one instance, a simple home, a hub, a blind home), the trust class of
+  each workload (S to C), and the benefits each choice earns. Then the
+  family's principles, the platform member surface, the rastrillo
   recipe, and the four decision axes — trust model (full, partial, or
   server-side, with each source app's recorded reasoning), app shape
   (server-rendered vs client-owned, "HTML-first or more like Woodstar"),
@@ -60,7 +64,9 @@ Distilled July 2026 from the prompt histories, repo instruction files and
 code of the five source applications plus the deliberate adopters; refreshed
 August 2026 for the platform era — the `carlos` CLI, Carloku hosting,
 rastrillo v0.5.0, and the decisions recorded by Keymail, Kass, Woodstar,
-and Tito along the way. Contains no secrets, hostnames of
+and Tito along the way; refreshed October 2026 to lead with tenancy and
+trust classes across the full gallery of app shapes, for platform v0.27
+and rastrillo v0.28. Contains no secrets, hostnames of
 boxes, account ids, or private links; verified with baseline and
 retrieval tests on fresh agents before publishing. The values layer
 underneath is [the eleven factors](https://11factor.org).
