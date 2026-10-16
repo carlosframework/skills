@@ -179,8 +179,11 @@ preference:
    does this on one origin (model C), where the one session already
    reaches every tenant. Across per-tenant hostnames (model B) each
    request needs that origin's own session, so there it is usually a
-   link per space instead. Every request can wake a sleeping instance:
-   Tito asks four at a time, and only when the person asks for more.
+   link per space instead. Every request can wake a sleeping instance,
+   so Tito answers typing from a cache the browser built from each
+   instance's own answers (refreshed when that account's digest changes),
+   and asks the instances live only when the person asks for more
+   results, at most four at a time.
 4. **One tenant at a time, with consent.** Support access is granted by
    the tenant's owner, time-limited, and logged before the first read.
    Never aggregation.
