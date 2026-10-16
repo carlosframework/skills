@@ -51,10 +51,9 @@ dispatcher).
    member in a team). If a feature needs to *query* across units
    (reporting, search across all customers), the unit is too small or
    that feature belongs in its own app. A central app answers "what
-   might I have access to", never "may I have this". There is no family
-   pattern yet for cross-tenant reporting (a vendor's dashboard across
-   every customer): if an app needs one, whatever leaves each instance is
-   declared residue, and the design is recorded and ruled, not improvised.
+   might I have access to", never "may I have this". A view across
+   tenants (a vendor's dashboard, a person's search over their own
+   spaces) has its own pattern: §2 "Seeing across tenants".
 5. **Does it idle?** Instances that sit idle hibernate and cost nothing.
    Small units that are used in bursts get the most from this.
 
@@ -146,6 +145,58 @@ to copy. Anything relational (reporting, search) belongs in an instance.
 | Create-only, quota-bounded provisioning role | Not built (platform #185). Use the `instance` role and name the leak |
 | Path targets on another box | Not built (platform #186). Model C is one box big |
 | rastrillo `objrec`, stateless auth store, signed-cookie sessions, `provision`, base-path serving, `rastrillo new --model home\|hub` | Not released (`objrec` is on a branch). Hand-build on the patterns above, and don't claim the framework does it |
+
+### Seeing across tenants
+
+A vendor wants totals across every customer; a person wants to search
+every space they belong to. Tito runs both with one rule: **the centre
+reports only what it owns or witnesses. It never opens a tenant's
+database.** Four ways data legitimately crosses the boundary, in order of
+preference:
+
+1. **Witnessed facts.** Make the number a fact the vendor owns (a fee, a
+   charge, usage) and record it where the vendor already sits on the
+   path: the proxy, payment egress, mail egress, a payment provider's
+   webhook. Tito's staff console totals fees owed and collected, request
+   timings and capacity this way, from facts its router and payment relay
+   saw for themselves.
+2. **Pushed facts through an outbox.** Where only the instance knows, it
+   writes a fixed-shape record (a fee accrual, a ticket count) to an
+   outbox table in the same transaction as the work, and a sender
+   delivers it to the central side, retrying until accepted. The record's
+   shape is declared residue, published like any other. The receiver
+   files each record under the instance that sent it, so **an instance
+   can only speak for itself**. Short self-descriptions (name, region,
+   counts) can also ride on responses the centre already proxies.
+3. **Browser fan-out for a person's own view.** A search or switcher
+   across someone's spaces asks each instance they are a member of,
+   from the browser, with membership checked by every instance. No
+   central copy; nothing widens the set beyond real memberships.
+4. **One tenant at a time, with consent.** Support access is granted by
+   the tenant's owner, time-limited, and logged before the first read.
+   Never aggregation.
+
+**Where the vendor's records live.** Not in the router, hub or home. A
+**back office app** with its own instance and database holds the
+vendor's ledger, partners and statements, receives the outbox, takes
+signed identity like any tenant instance, and asks the central app for
+anything else through a narrow API (list accounts, create one). Tito's
+console holds these in its router today and is moving them into a back
+office app of this shape.
+
+**Not allowed:** a central app or reporting job opening tenant databases
+(`carlos db pull` across every instance is a backup of everyone, not a
+report); copying tenant content (buyers, messages, documents) into a
+central store; a `tenant_id` warehouse.
+
+**The credential caveat (2026-10-16).** Step 2 needs the receiver to know
+which instance sent a record. Tito does it with box-local sockets and a
+header the instance sets, which a compromised instance could forge for a
+sibling. On Carloku the clean version needs per-instance credentials
+(platform #155, not built). Until then, accept pushed facts only from
+inside your own trust boundary, check them against what you witnessed
+where you can (a fee against the provider's webhook), and name the gap
+as a leak.
 
 ## 3. What the host can see: the trust class
 
@@ -280,3 +331,4 @@ Waiting on:           <unshipped platform or rastrillo pieces relied on, by name
 | One class for the whole product | Class is per workload. A sidecar or central app that sees plaintext gets its own letter. |
 | Claiming the platform enforces your class or residency | Neither is enforced on Carloku as of 2026-10-15. Declare; don't overclaim. |
 | Copying data between instances to share it | Sharing is membership. Data never crosses a boundary. |
+| A reporting job that opens every tenant's database | The centre reports what it owns or witnesses; instances push fixed-shape facts through an outbox; a person's cross-space view fans out in the browser — §2 "Seeing across tenants". |
