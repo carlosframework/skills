@@ -163,7 +163,11 @@ preference:
 2. **Pushed facts through an outbox.** Where only the instance knows, it
    writes a fixed-shape record (a fee accrual, a ticket count) to an
    outbox table in the same transaction as the work, and a sender
-   delivers it to the central side, retrying until accepted. The record's
+   delivers it to the central side, retrying until accepted. The
+   instance is usually asleep, so send at the end of the request that did
+   the work, and let anything undelivered go on the next wake or a daily
+   `carlos schedule` tick (a tighter schedule keeps the instance awake,
+   and that is billed). Give each record an id the receiver dedupes on. The record's
    shape is declared residue, published like any other. The receiver
    files each record under the instance that sent it, so **an instance
    can only speak for itself**. Short self-descriptions (name, region,
@@ -171,7 +175,12 @@ preference:
 3. **Browser fan-out for a person's own view.** A search or switcher
    across someone's spaces asks each instance they are a member of,
    from the browser, with membership checked by every instance. No
-   central copy; nothing widens the set beyond real memberships.
+   central copy; nothing widens the set beyond real memberships. Tito
+   does this on one origin (model C), where the one session already
+   reaches every tenant. Across per-tenant hostnames (model B) each
+   request needs that origin's own session, so there it is usually a
+   link per space instead. Every request can wake a sleeping instance:
+   Tito asks four at a time, and only when the person asks for more.
 4. **One tenant at a time, with consent.** Support access is granted by
    the tenant's owner, time-limited, and logged before the first read.
    Never aggregation.
