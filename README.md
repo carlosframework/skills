@@ -65,7 +65,7 @@ code of the five source applications plus the deliberate adopters; refreshed
 August 2026 for the platform era — the `carlos` CLI, Carloku hosting,
 rastrillo v0.5.0, and the decisions recorded by Keymail, Kass, Woodstar,
 and Tito along the way; refreshed October 2026 to lead with tenancy and
-trust classes across the full gallery of app shapes, for platform v0.27
+trust classes across the full gallery of app shapes, for platform v0.28
 and rastrillo v0.28. Contains no secrets, hostnames of
 boxes, account ids, or private links; verified with baseline and
 retrieval tests on fresh agents before publishing. The values layer
