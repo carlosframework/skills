@@ -73,9 +73,13 @@ runtime for every process; keep them out of the image and process file.
 
 `web` listens on `CARLOS_SOCKET` and must answer `GET /` with a status below 500
 within 120 seconds. Workers start only after that health check passes. `release`
-runs before a new web generation and must finish successfully.
+runs before a new web generation and must finish successfully (a ten-minute
+default timeout). `console` is reserved and is never started by the platform.
 
-The filesystem is read-only except for declared writable data and runtime paths.
+The filesystem is read-only except for the directory containing `CARLOS_DB`
+and `/tmp`. The former survives restarts and deploys; `/tmp` is emptied at
+each start and counts against memory. Private-network egress requires an
+operator allow; a rootfs image cannot grant it to itself.
 All processes in one instance share its memory and CPU tier. A process exceeding
 the shared memory ceiling is stopped and restarted.
 

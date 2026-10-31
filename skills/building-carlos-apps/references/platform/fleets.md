@@ -57,11 +57,12 @@ cannot be the platform's own key. Re-registering the same key on the same fleet
 is harmless. `carlos fleets ls` shows the registered public-key fingerprint and
 a `STALE` count for sealed values the fleet cannot open.
 
-Installing the matching private key on fleet boxes is an operator workflow,
-separate from this member API. Do not ask a member to log into a box or run a
-box-local fingerprint command as the verification step. If the member CLI
-cannot prove that the fleet has the matching private key, that is a product gap
-to report, not permission to work around the API.
+Installing the private key and checking its local fingerprint belong to the
+fleet administrator, within the user's authorized infrastructure workflow.
+That administrator can compare `carlos secrets fingerprint` on the box with
+the registered public fingerprint in `carlos fleets ls`. An app member uses
+the console's fleet status; do not make box access part of an ordinary app
+release or claim that `fleets ls` alone proves the key is installed.
 
 Replacing a fleet key is refused while fleet apps still hold sealed values.
 For planned replacement:

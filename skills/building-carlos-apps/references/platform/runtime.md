@@ -13,7 +13,7 @@ refusal as the capability answer; do not fall through to box or cloud access.
 A person in the account can run one of the app's commands as an instance:
 
 ```sh
-carlos run --app shop --instance shop.example.com -- import orders.csv
+carlos run --app shop --instance shop.example.com --file orders.csv -- import orders.csv
 ```
 
 The run uses that instance's build, environment, data, user, and directories.
@@ -33,16 +33,17 @@ carlos services create --role run --app shop \
 `--app` and `--commands` are required. No broader service role, including
 `admin`, inherits run authority. Each comma-separated grant is an exact argv
 word prefix. `import classic` permits `import classic --slug acme`, including
-every flag and argument after that prefix; it does not permit `import`, `import
-classical`, or `import sync`. Grant the longest prefix that identifies the
-intended job. The list is fixed at mint; replace the credential to change it.
+every flag and argument after that prefix. That prefix alone does not permit
+`import`, `import classical`, or `import sync`. Grant the most specific prefix
+that names the intended job, never a broader one such as `import`. At most 32 prefixes are accepted; an empty prefix is
+refused. The list is fixed at mint; replace the credential to change it.
 
 Use an idempotency key when an uncertain connection must not start the command
 twice within the key retention window:
 
 ```sh
 carlos run --app shop --instance shop.example.com \
-  --idempotency-key import-2026-10-31-acme -- import classic acme.csv
+  --idempotency-key import-2026-10-31-acme --file acme.csv -- import classic acme.csv
 ```
 
 Keys work only after the console operator enables keyed runs. Until then the
@@ -57,6 +58,13 @@ a timeout, connection loss, or 5xx is also an unknown outcome and must be retrie
 with the same key while it is retained. After 24 hours or 32 newer keyed
 admissions, the key may start a fresh run: investigate instead of retrying
 blindly.
+
+Within the retention window, rerunning the same CLI command with the same
+key and files follows the existing run instead of starting another. If that
+run's output was read or cleared, the CLI reports that it already started
+and exits 2. That exit is evidence the run happened, not a reason to submit
+under a fresh key. Boxes rolled back to builds predating keyed runs can lose
+keys; an operator must preserve compatible box versions after enabling them.
 
 For a service client, inspect the existing admission through the console API:
 `GET /api/cli/apps/<account>/<app>/instances/<host>/runs?key=<key>` with its
@@ -80,6 +88,10 @@ restores them locally. The regional query copy is bounded to 2 GB restored, five
 minutes, and 64 MB of returned rows; a pull is bounded to 2 GB. The output path
 must not exist. Neither command touches the live database.
 
+A replica snapshot can lag a busy instance. Fleet and pool instances have no
+such copy in this contract. Treat a pulled `.db` as tenant data: keep it in
+protected task storage and remove it when finished.
+
 Regional forwarding can be disabled or unavailable on a console. Do not replace
 it with direct object-store reads. If the command refuses a fleet, pool, or
 instance shape, report that supported boundary.
@@ -99,6 +111,9 @@ carlos env adopt --app shop --environment alta-prod --scope alta
 carlos env fork --app shop --from template --to alta-prod --scope alta
 carlos env release --app shop --environment alta-prod
 ```
+
+`env fork` copies sealed secrets unchanged. Fork only from an environment
+whose secrets the destination team is authorized to hold.
 
 An owned environment is standalone: it never inherits the app's default bundle.
 It receives its own platform-managed mail and relay identities. The team

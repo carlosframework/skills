@@ -19,6 +19,10 @@ public tunnel, or change production DNS. Folder links are copied snapshots;
 re-share after edits. Remove links and stop task-owned servers when done,
 unless the user explicitly asked to keep them running.
 
+The dev server and share command need the host network namespace, outside
+an isolated agent sandbox, using the environment's permitted execution path.
+If sandbox policy blocks that path, request access instead of bypassing it.
+
 If the devbox service is unavailable, check the local setup; an installed CLI
 alone does not make the machine a devbox. Respect the sandbox and machine
 network policy.
