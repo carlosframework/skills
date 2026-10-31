@@ -5,7 +5,7 @@ description: Use when someone wants a new app on CARLOS built and live with mini
 
 # 🤖 Getting started on CARLOS
 
-## First build — read this, then build
+## First build: read this, then build
 
 For a new Rastrillo app, get the local build working before reading the
 platform setup below. Carloku login, repo hosting and platform services
