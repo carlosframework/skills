@@ -11,7 +11,8 @@
       "skills": [
         "./skills/getting-started",
         "./skills/building-carlos-apps",
-        "./skills/delegate"
+        "./skills/delegate",
+        "./skills/devbox"
       ]
     }
   ],

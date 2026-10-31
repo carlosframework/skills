@@ -23,7 +23,12 @@ Two paths, one family:
   hosting (hosted, your own boxes, or self-hosting the platform), and
   identity.
 
-Plus **[delegate](skills/delegate/SKILL.md)** — the operator's shorthand
+Plus **[devbox](skills/devbox/SKILL.md)**, for agents on a shared development
+machine running devbox mode: publish an owned, tailnet-only HTTPS link to
+your dev server or a mockup folder with `carlos devbox share`, and remove
+it when the review is done.
+
+And **[delegate](skills/delegate/SKILL.md)** — the operator's shorthand
 for decomposing a workload across capability-tiered subagents.
 
 ## Install
@@ -36,7 +41,7 @@ As a Claude Code plugin (recommended):
 ```
 
 The skills are then available as `carlos:getting-started`,
-`carlos:building-carlos-apps`, and `carlos:delegate`.
+`carlos:building-carlos-apps`, `carlos:devbox`, and `carlos:delegate`.
 
 Or plainly: copy a skill's directory into your app repo's
 `.claude/skills/` (or `~/.claude/skills/` for all projects). Each is a
