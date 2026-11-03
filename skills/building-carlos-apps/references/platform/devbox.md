@@ -9,8 +9,16 @@ for the complete workstation workflow.
 carlos devbox list
 carlos devbox share --port 5173 preview
 carlos devbox share --dir ./public mockup
+carlos devbox share --port 5173 --allow alice@github preview
+carlos devbox share --socket /run/carlos-devbox/sockets/review.sock review
 carlos devbox unshare preview
 ```
+
+On a Linux devbox, `--allow` limits a link to named tailnet logins, and
+`--socket` serves a tool's own Unix socket from `/run/carlos-devbox/sockets`.
+Every request carries `Carlos-Visitor-Login`, `Carlos-Visitor-Name` and
+`Carlos-Visitor-Node`, which the edge strips from visitors and sets itself;
+a missing login means anonymous. Neither flag works on a Mac devbox.
 
 Run the development server on `127.0.0.1:5173`, never a public or LAN bind.
 The returned HTTPS link is tailnet-only and owned by the account that created
@@ -27,5 +35,6 @@ If the devbox service is unavailable, check the local setup; an installed CLI
 alone does not make the machine a devbox. Respect the sandbox and machine
 network policy.
 
-Source: platform `devbox_cli.go`, `docs/site/cli.md` at `a2e23ba0`;
+Source: platform `devbox_cli.go`, `internal/edge/devboxfront.go`,
+`docs/site/cli.md` (#486 A);
 CARLOS plugin `skills/devbox/SKILL.md`.
