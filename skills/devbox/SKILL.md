@@ -9,6 +9,9 @@ A devbox is a shared Linux workstation on a private network (a tailnet) where th
 
 - **a live link**: your own dev server on `127.0.0.1:<port>`. Edits show up live, because live reload passes through.
 - **a folder link**: a copy of a static folder (mockups, decks, prototypes), served with its `_headers` file.
+- **a socket link** (Linux devboxes only): a tool of yours listening on a Unix socket instead of a port, so no other account on the machine can reach it except through the link.
+
+On a Linux devbox, any link can be limited to named tailnet logins with `--allow`, and requests through a link carry the visitor's identity in headers your tool can trust (absent when the visitor is anonymous).
 
 The name belongs to the account that published it. Nobody else can repoint or remove it.
 
@@ -55,6 +58,47 @@ Name folder links explicitly: the default is the git branch name, which your liv
 
 The folder is uploaded as a snapshot. Sharing it again with the same name replaces the copy, so re-run it after edits. Plain files and folders only: symlinks and special files are refused. The cap is 200 MiB per folder, and the devbox has a shared total.
 
+## Share a socket (Linux only)
+
+Use this for a tool that should only be reachable through the link, such as a review daemon that needs to know who is looking.
+
+1. Have the tool create its socket directly inside `/run/carlos-devbox/sockets` (any account can create one there; nobody can list the folder, and only the owner can remove a socket). Run the tool outside the sandbox, like a dev server.
+2. Publish it:
+
+   ```sh
+   carlos devbox share --socket /run/carlos-devbox/sockets/review.sock review
+   ```
+
+   `share` makes the socket private to you and the devbox service, and checks that something answers on it.
+3. After any restart of the tool, run `share` again: a restarted tool almost always removes and recreates its socket file, and the new file is not private until `share` runs.
+
+On a Mac devbox `--socket` is refused: use `--port`.
+
+## Limit who can open a link: `--allow`
+
+```sh
+carlos devbox share --port 5173 --allow alice@github,bob@github shop
+```
+
+- Logins are tailnet logins, separated by commas, no spaces. Works for every kind of link.
+- Anyone else sees a page saying the link is private. Without `--allow`, everyone on the tailnet can open it.
+- Sharing again replaces the list; sharing without `--allow` opens the link to the tailnet again.
+- A browser on the devbox itself (or on another shared machine the operator listed) is anonymous, so an allow-listed link shows it the private page. Test from your own device.
+- `carlos devbox list` shows an access column: `private` or `tailnet`. `carlos devbox list --allowed` also shows who can open your own private links (other people's lists stay hidden).
+- On a Mac devbox `--allow` is refused: every link there is open to the tailnet.
+
+## Who is visiting: identity headers
+
+On a Linux devbox the edge adds these headers to every request through any link:
+
+| Header | Value |
+|---|---|
+| `Carlos-Visitor-Login` | the visitor's tailnet login, e.g. `alice@github` |
+| `Carlos-Visitor-Name` | their display name |
+| `Carlos-Visitor-Node` | the device they are on |
+
+The edge removes any of these a visitor sends (in any spelling, including underscores), so a tool behind a link can trust them. They are absent when the visitor is anonymous: a request from the devbox itself, from a shared machine, or when the devbox can't ask Tailscale. Treat a missing login as anonymous, never as the owner.
+
 ## When the review is done
 
 ```sh
@@ -85,6 +129,13 @@ Without the host setting, the dev server answers its own "blocked host" page thr
 | `the branch ... has no letters or digits` / `no name given` | Pass a name explicitly. |
 | `could not reach the devbox service` | Run the command outside the sandbox. If it still fails, tell the user, since the service may be down. |
 | `... no room for another folder` | Unshare a folder you no longer need, or tell the user. |
+| `... is not directly inside <sockets dir>` | Have the tool create its socket in that folder, then share again. |
+| `... is not a socket` / `... belongs to another account` | Give the path of a socket your own tool created. |
+| `nothing is answering on ...` | Start the tool, then share again. |
+| `could not let the devbox service open ...` / `this machine has no devbox service user ...` | Tell the user; the devbox setup needs attention. |
+| `--socket works on Linux devboxes only` / `--allow works on Linux devboxes only` | On a Mac devbox, use `--port` and an open link. |
+| `... is not a tailnet login` | Give logins such as `alice@github`, separated by commas, no spaces. |
+| `flag provided but not defined: -socket` (or `-allow`) | The installed carlos CLI predates these flags. Tell the user. |
 
 ## Don't
 
