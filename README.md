@@ -7,10 +7,12 @@ architecture described at [carlosframework.com](https://carlosframework.com).
 Two paths, one family:
 
 - **[getting-started](skills/getting-started/SKILL.md)** — the recipe:
-  empty directory to a live URL on the hosted platform
-  ([carloku.com](https://carloku.com)), every decision pre-made — rastrillo,
-  server-rendered HTML, `carlos deploy`. For a first app with minimum
-  further guidance.
+  it opens by interviewing the operator (what they hope to achieve, how
+  much of an existing app they will replace, how polished the first
+  slice should be and with what personality, where to host), then
+  builds a first slice that feels finished with rastrillo, and deploys
+  it where they chose: Carloku ([carloku.com](https://carloku.com)), a
+  self-hosted CARLOS Platform, their own boxes or a plain server.
 - **[building-carlos-apps](skills/building-carlos-apps/SKILL.md)** — the
   menu. It starts with tenancy: what one instance of the app is (a person,
   a team, a customer, a repository, the whole app), how people reach it
@@ -20,8 +22,8 @@ Two paths, one family:
   recipe, and the four decision axes — trust model (full, partial, or
   server-side, with each source app's recorded reasoning), app shape
   (server-rendered vs client-owned, "HTML-first or more like Woodstar"),
-  hosting (hosted, your own boxes, or self-hosting the platform), and
-  identity.
+  hosting (Carloku, self-hosting the open-source platform, your own
+  boxes, or a plain server), and identity.
 
 Plus **[devbox](skills/devbox/SKILL.md)**, for agents on a shared development
 machine running devbox mode: publish an owned, tailnet-only HTTPS link to
@@ -71,7 +73,9 @@ August 2026 for the platform era — the `carlos` CLI, Carloku hosting,
 rastrillo v0.5.0, and the decisions recorded by Keymail, Kass, Woodstar,
 and Tito along the way; refreshed October 2026 to lead with tenancy and
 trust classes across the full gallery of app shapes, for platform v0.28
-and rastrillo v0.28. Contains no secrets, hostnames of
+and rastrillo v0.28; refreshed November 2026 to interview the operator
+first, ask where to host, treat JavaScript as progressive enhancement,
+and catch up with platform v0.34 and rastrillo v0.31. Contains no secrets, hostnames of
 boxes, account ids, or private links; verified with baseline and
 retrieval tests on fresh agents before publishing. The values layer
 underneath is [the eleven factors](https://11factor.org).
