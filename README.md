@@ -12,7 +12,8 @@ Two paths, one family:
   slice should be and with what personality, where to host), then
   builds a first slice that feels finished with rastrillo, and deploys
   it where they chose: Carloku ([carloku.com](https://carloku.com)), a
-  self-hosted CARLOS Platform, their own boxes or a plain server.
+  self-hosted CARLOS Platform, their own boxes, a host they already use
+  (Fly, Render, Railway) or a plain server.
 - **[building-carlos-apps](skills/building-carlos-apps/SKILL.md)** — the
   menu. It starts with tenancy: what one instance of the app is (a person,
   a team, a customer, a repository, the whole app), how people reach it

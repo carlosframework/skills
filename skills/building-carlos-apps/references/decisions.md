@@ -161,10 +161,11 @@ settings pages can stay server-shape beside its client-shape editor.
 
 Hosting is the operator's choice, asked in the first conversation, and
 every option runs the same binary. [Hosting](hosting.md) sets out the
-four: Carloku (the hosted CARLOS Platform, zero operations), a
+options: Carloku (the hosted CARLOS Platform, zero operations), a
 self-hosted CARLOS Platform (open source, for when they must be the
 operator of record), their own boxes joined to a console as a customer
-fleet, or a plain server running the binary with TLS, backups, email
+fleet, a host they already use (Fly, Render, Railway) with the app on a
+volume, or a plain server running the binary with TLS, backups, email
 and schedules as theirs. Present Carloku as the convenient option it
 is, never as the only one.
 

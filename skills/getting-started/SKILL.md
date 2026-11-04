@@ -46,7 +46,8 @@ words. Keep working on whatever does not depend on the answers.
    each and ask; do not assume one. Carloku is the hosted, zero-ops
    option, a convenience running CARLOS Platform, an open-source stack
    built for these apps; they can also self-host that platform, join
-   their own boxes, or run the binary on any server.
+   their own boxes, use a host they already have an account with (Fly,
+   Render, Railway), or run the binary on any server.
    [Hosting](../building-carlos-apps/references/hosting.md) has the
    detail. "Decide later" is a fine answer: the first slice runs
    locally.

@@ -29,7 +29,8 @@ exists.
 | **Carloku** | Nothing | Routing, TLS, replication to object storage, hibernation, schedules, email, logs, analytics, edge protection, the `carlos` CLI | A hosted vendor; billed per app |
 | **Self-hosted CARLOS Platform** | The platform on their own cloud account | The same platform and CLI against their own console | Real operations: provisioning, platform upgrades, backups of the console's own databases, HA they build |
 | **Their boxes, Carloku's control plane** (a customer fleet) | Boxes they own, joined with `carlos fleets` | Apps placed on their hardware, managed by the same CLI | Box upkeep; a plan may gate own boxes |
-| **A plain server or container host** | The app binary alone | An always-on app, no platform | Everything below is theirs |
+| **A platform they already use** (Fly, Render, Railway and the like) | The app as one service with a volume | Their existing account, TLS, domains, secrets, often scale to zero | One instance per volume; backups, email and schedules mostly theirs |
+| **A plain server** | The app binary alone | An always-on app, no platform | Everything below is theirs |
 
 **Self-hosting the platform.** The public walkthrough is
 [https://carlosframework.com/platform/self-host/](https://carlosframework.com/platform/self-host/):
@@ -71,8 +72,33 @@ the operator's:
 - **Architecture**: build for the server's CPU, `make release
   RELEASE_GOARCH=amd64` for most x86 hosts.
 
+**A platform they already use.** Fly, Render, Railway and similar hosts
+run the app as one container or service; check the provider's current
+docs, since limits and plans move. What holds across them:
+
+- **The service.** A container image holding the static binary and CA
+  certificates (a distroless static base), or the provider's own Go
+  build. Start it with a fixed port the provider is told about:
+  `myapp -addr :8080 -db /data/myapp.db` (Rastrillo does not read
+  `$PORT`).
+- **A persistent volume at `/data`.** SQLite lives there, so it is one
+  instance per volume: no horizontal scaling, and a deploy has a short
+  gap while the volume moves to the new machine (Render documents
+  this). Without a volume the database vanishes on every deploy.
+- **Backups.** Providers snapshot volumes about daily; Litestream to a
+  bucket gives point-in-time recovery on top.
+- **Scale to zero, where offered** (Fly's auto-stop and auto-start,
+  Railway's serverless sleep) behaves much like hibernation: background
+  jobs end when the machine stops, so keep them idempotent. A disk on
+  Render needs an always-on paid instance.
+- **The plain-server list still applies** for origin, instance key,
+  email, files and schedules: set them as the provider's secrets, and
+  point the provider's cron (or a scheduled job) at the scheduled path
+  with the admin-token bearer.
+
 A product with an instance per customer needs something to start and
-route those instances; off the platform that is a hand-rolled host.
+route those instances (on these hosts, one service per customer through
+the provider's API); off the platform that is a hand-rolled host.
 [Blueprint](blueprint.md) is the complete recipe the platform automated.
 
 ## Moving later
